@@ -53,3 +53,7 @@ class ClientRepository {
 final clientRepositoryProvider = Provider<ClientRepository>((ref) {
   return ClientRepository(ref.watch(databaseProvider));
 });
+
+final clientsProvider = FutureProvider<List<model.Client>>((ref) {
+  return ref.watch(clientRepositoryProvider).watchAll().first;
+});

@@ -63,3 +63,7 @@ class OrderRepository {
 final orderRepositoryProvider = Provider<OrderRepository>((ref) {
   return OrderRepository(ref.watch(databaseProvider));
 });
+
+final ordersProvider = FutureProvider<List<model.Order>>((ref) {
+  return ref.watch(orderRepositoryProvider).watchAll().first;
+});

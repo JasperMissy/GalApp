@@ -2,10 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:galabau_app/main.dart';
+import 'package:galabau_app/models/client.dart';
+import 'package:galabau_app/services/customers/client_repository.dart';
+import 'package:galabau_app/services/orders/order_repository.dart';
 
 void main() {
-  Future<void> pumpApp(WidgetTester tester) async {
-    await tester.pumpWidget(const ProviderScope(child: GalabauApp()));
+  Future<void> pumpApp(
+    WidgetTester tester, {
+    List<Client> clients = const <Client>[],
+  }) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          clientsProvider.overrideWith((ref) => Future.value(clients)),
+          ordersProvider.overrideWith((ref) => Future.value(const [])),
+        ],
+        child: const GalabauApp(),
+      ),
+    );
   }
 
   testWidgets('Navigationsleiste zeigt die fünf Ziele laut Skizze',
@@ -60,5 +74,34 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Noch keine Kunden'), findsOneWidget);
+  });
+
+  testWidgets('Kundenliste zeigt vorhandene Kunden',
+      (WidgetTester tester) async {
+    await pumpApp(
+      tester,
+      clients: <Client>[
+        Client(
+          id: 'k-1',
+          name: 'Max Mustermann',
+          street: 'Beispielweg 1',
+          zip: '34123',
+          city: 'Kassel',
+          phone: '',
+          email: '',
+          createdAt: DateTime(2026),
+        ),
+      ],
+    );
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(NavigationBar),
+        matching: find.text('Kunden'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Max Mustermann'), findsOneWidget);
   });
 }
