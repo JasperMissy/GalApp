@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
-/// Menüpunkt „Extras“: Rechnungsverwaltung sowie Rechnungs- und
-/// Angebotsvorlage.
-///
-/// Gerüst: Die Unterseiten folgen mit den jeweiligen Meilensteinen.
+import 'settings_screen.dart';
+
+/// Menüpunkt „Extras“: Rechnungsverwaltung sowie Stammdaten & Design.
 class ExtrasView extends StatelessWidget {
   const ExtrasView({super.key});
 
@@ -13,26 +12,34 @@ class ExtrasView extends StatelessWidget {
       appBar: AppBar(title: const Text('Extras')),
       body: ListView(
         padding: const EdgeInsets.all(16),
-        children: const <Widget>[
-          _ExtrasEntry(
+        children: <Widget>[
+          const _ExtrasEntry(
             icon: Icons.receipt_long_outlined,
             title: 'Rechnungsverwaltung',
             subtitle: 'Einnahmen und Ausgaben (Material- und Personalkosten)',
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           _ExtrasEntry(
-            icon: Icons.description_outlined,
-            title: 'Rechnungsvorlage',
-            subtitle: 'Eigene .docx-Vorlage hochladen und Platzhalter festlegen',
+            icon: Icons.palette_outlined,
+            title: 'Rechnungsdesign',
+            subtitle: 'Stammdaten & Layout (Logo, Akzentfarbe, Blöcke)',
+            onTap: () => _openSettings(context),
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           _ExtrasEntry(
             icon: Icons.request_quote_outlined,
-            title: 'Angebotsvorlage',
-            subtitle: 'Eigene .docx-Vorlage hochladen und Platzhalter festlegen',
+            title: 'Angebotsdesign',
+            subtitle: 'Dieselbe Engine, eigene Nummern (AN-)',
+            onTap: () => _openSettings(context),
           ),
         ],
       ),
+    );
+  }
+
+  void _openSettings(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
     );
   }
 }
@@ -42,11 +49,13 @@ class _ExtrasEntry extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.onTap,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +68,8 @@ class _ExtrasEntry extends StatelessWidget {
         ),
         subtitle: Text(subtitle),
         trailing: const Icon(Icons.chevron_right),
-        enabled: false,
+        enabled: onTap != null,
+        onTap: onTap,
       ),
     );
   }
