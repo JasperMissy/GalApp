@@ -2179,6 +2179,629 @@ class InvoiceSequencesCompanion extends UpdateCompanion<InvoiceSequence> {
   }
 }
 
+class $OrdersTable extends Orders with TableInfo<$OrdersTable, Order> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $OrdersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _clientIdMeta = const VerificationMeta(
+    'clientId',
+  );
+  @override
+  late final GeneratedColumn<String> clientId = GeneratedColumn<String>(
+    'client_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES clients (id)',
+    ),
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, String> createdAt =
+      GeneratedColumn<String>(
+        'created_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($OrdersTable.$convertercreatedAt);
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime?, String> dueDateStart =
+      GeneratedColumn<String>(
+        'due_date_start',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      ).withConverter<DateTime?>($OrdersTable.$converterdueDateStartn);
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime?, String> dueDateEnd =
+      GeneratedColumn<String>(
+        'due_date_end',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      ).withConverter<DateTime?>($OrdersTable.$converterdueDateEndn);
+  @override
+  late final GeneratedColumnWithTypeConverter<OrderStatus, String> status =
+      GeneratedColumn<String>(
+        'status',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('offen'),
+      ).withConverter<OrderStatus>($OrdersTable.$converterstatus);
+  static const VerificationMeta _recurringMeta = const VerificationMeta(
+    'recurring',
+  );
+  @override
+  late final GeneratedColumn<bool> recurring = GeneratedColumn<bool>(
+    'recurring',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("recurring" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    clientId,
+    title,
+    description,
+    createdAt,
+    dueDateStart,
+    dueDateEnd,
+    status,
+    recurring,
+    notes,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'orders';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Order> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('client_id')) {
+      context.handle(
+        _clientIdMeta,
+        clientId.isAcceptableOrUnknown(data['client_id']!, _clientIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_clientIdMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('recurring')) {
+      context.handle(
+        _recurringMeta,
+        recurring.isAcceptableOrUnknown(data['recurring']!, _recurringMeta),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Order map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Order(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      clientId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}client_id'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      )!,
+      createdAt: $OrdersTable.$convertercreatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}created_at'],
+        )!,
+      ),
+      dueDateStart: $OrdersTable.$converterdueDateStartn.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}due_date_start'],
+        ),
+      ),
+      dueDateEnd: $OrdersTable.$converterdueDateEndn.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}due_date_end'],
+        ),
+      ),
+      status: $OrdersTable.$converterstatus.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}status'],
+        )!,
+      ),
+      recurring: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}recurring'],
+      )!,
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      )!,
+    );
+  }
+
+  @override
+  $OrdersTable createAlias(String alias) {
+    return $OrdersTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, String> $convertercreatedAt =
+      const IsoDateConverter();
+  static TypeConverter<DateTime, String> $converterdueDateStart =
+      const IsoDateConverter();
+  static TypeConverter<DateTime?, String?> $converterdueDateStartn =
+      NullAwareTypeConverter.wrap($converterdueDateStart);
+  static TypeConverter<DateTime, String> $converterdueDateEnd =
+      const IsoDateConverter();
+  static TypeConverter<DateTime?, String?> $converterdueDateEndn =
+      NullAwareTypeConverter.wrap($converterdueDateEnd);
+  static JsonTypeConverter2<OrderStatus, String, String> $converterstatus =
+      const EnumNameConverter<OrderStatus>(OrderStatus.values);
+}
+
+class Order extends DataClass implements Insertable<Order> {
+  final String id;
+  final String clientId;
+  final String title;
+  final String description;
+  final DateTime createdAt;
+  final DateTime? dueDateStart;
+  final DateTime? dueDateEnd;
+  final OrderStatus status;
+  final bool recurring;
+  final String notes;
+  const Order({
+    required this.id,
+    required this.clientId,
+    required this.title,
+    required this.description,
+    required this.createdAt,
+    this.dueDateStart,
+    this.dueDateEnd,
+    required this.status,
+    required this.recurring,
+    required this.notes,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['client_id'] = Variable<String>(clientId);
+    map['title'] = Variable<String>(title);
+    map['description'] = Variable<String>(description);
+    {
+      map['created_at'] = Variable<String>(
+        $OrdersTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
+    if (!nullToAbsent || dueDateStart != null) {
+      map['due_date_start'] = Variable<String>(
+        $OrdersTable.$converterdueDateStartn.toSql(dueDateStart),
+      );
+    }
+    if (!nullToAbsent || dueDateEnd != null) {
+      map['due_date_end'] = Variable<String>(
+        $OrdersTable.$converterdueDateEndn.toSql(dueDateEnd),
+      );
+    }
+    {
+      map['status'] = Variable<String>(
+        $OrdersTable.$converterstatus.toSql(status),
+      );
+    }
+    map['recurring'] = Variable<bool>(recurring);
+    map['notes'] = Variable<String>(notes);
+    return map;
+  }
+
+  OrdersCompanion toCompanion(bool nullToAbsent) {
+    return OrdersCompanion(
+      id: Value(id),
+      clientId: Value(clientId),
+      title: Value(title),
+      description: Value(description),
+      createdAt: Value(createdAt),
+      dueDateStart: dueDateStart == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dueDateStart),
+      dueDateEnd: dueDateEnd == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dueDateEnd),
+      status: Value(status),
+      recurring: Value(recurring),
+      notes: Value(notes),
+    );
+  }
+
+  factory Order.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Order(
+      id: serializer.fromJson<String>(json['id']),
+      clientId: serializer.fromJson<String>(json['clientId']),
+      title: serializer.fromJson<String>(json['title']),
+      description: serializer.fromJson<String>(json['description']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      dueDateStart: serializer.fromJson<DateTime?>(json['dueDateStart']),
+      dueDateEnd: serializer.fromJson<DateTime?>(json['dueDateEnd']),
+      status: $OrdersTable.$converterstatus.fromJson(
+        serializer.fromJson<String>(json['status']),
+      ),
+      recurring: serializer.fromJson<bool>(json['recurring']),
+      notes: serializer.fromJson<String>(json['notes']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'clientId': serializer.toJson<String>(clientId),
+      'title': serializer.toJson<String>(title),
+      'description': serializer.toJson<String>(description),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'dueDateStart': serializer.toJson<DateTime?>(dueDateStart),
+      'dueDateEnd': serializer.toJson<DateTime?>(dueDateEnd),
+      'status': serializer.toJson<String>(
+        $OrdersTable.$converterstatus.toJson(status),
+      ),
+      'recurring': serializer.toJson<bool>(recurring),
+      'notes': serializer.toJson<String>(notes),
+    };
+  }
+
+  Order copyWith({
+    String? id,
+    String? clientId,
+    String? title,
+    String? description,
+    DateTime? createdAt,
+    Value<DateTime?> dueDateStart = const Value.absent(),
+    Value<DateTime?> dueDateEnd = const Value.absent(),
+    OrderStatus? status,
+    bool? recurring,
+    String? notes,
+  }) => Order(
+    id: id ?? this.id,
+    clientId: clientId ?? this.clientId,
+    title: title ?? this.title,
+    description: description ?? this.description,
+    createdAt: createdAt ?? this.createdAt,
+    dueDateStart: dueDateStart.present ? dueDateStart.value : this.dueDateStart,
+    dueDateEnd: dueDateEnd.present ? dueDateEnd.value : this.dueDateEnd,
+    status: status ?? this.status,
+    recurring: recurring ?? this.recurring,
+    notes: notes ?? this.notes,
+  );
+  Order copyWithCompanion(OrdersCompanion data) {
+    return Order(
+      id: data.id.present ? data.id.value : this.id,
+      clientId: data.clientId.present ? data.clientId.value : this.clientId,
+      title: data.title.present ? data.title.value : this.title,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      dueDateStart: data.dueDateStart.present
+          ? data.dueDateStart.value
+          : this.dueDateStart,
+      dueDateEnd: data.dueDateEnd.present
+          ? data.dueDateEnd.value
+          : this.dueDateEnd,
+      status: data.status.present ? data.status.value : this.status,
+      recurring: data.recurring.present ? data.recurring.value : this.recurring,
+      notes: data.notes.present ? data.notes.value : this.notes,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Order(')
+          ..write('id: $id, ')
+          ..write('clientId: $clientId, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('dueDateStart: $dueDateStart, ')
+          ..write('dueDateEnd: $dueDateEnd, ')
+          ..write('status: $status, ')
+          ..write('recurring: $recurring, ')
+          ..write('notes: $notes')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    clientId,
+    title,
+    description,
+    createdAt,
+    dueDateStart,
+    dueDateEnd,
+    status,
+    recurring,
+    notes,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Order &&
+          other.id == this.id &&
+          other.clientId == this.clientId &&
+          other.title == this.title &&
+          other.description == this.description &&
+          other.createdAt == this.createdAt &&
+          other.dueDateStart == this.dueDateStart &&
+          other.dueDateEnd == this.dueDateEnd &&
+          other.status == this.status &&
+          other.recurring == this.recurring &&
+          other.notes == this.notes);
+}
+
+class OrdersCompanion extends UpdateCompanion<Order> {
+  final Value<String> id;
+  final Value<String> clientId;
+  final Value<String> title;
+  final Value<String> description;
+  final Value<DateTime> createdAt;
+  final Value<DateTime?> dueDateStart;
+  final Value<DateTime?> dueDateEnd;
+  final Value<OrderStatus> status;
+  final Value<bool> recurring;
+  final Value<String> notes;
+  final Value<int> rowid;
+  const OrdersCompanion({
+    this.id = const Value.absent(),
+    this.clientId = const Value.absent(),
+    this.title = const Value.absent(),
+    this.description = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.dueDateStart = const Value.absent(),
+    this.dueDateEnd = const Value.absent(),
+    this.status = const Value.absent(),
+    this.recurring = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  OrdersCompanion.insert({
+    required String id,
+    required String clientId,
+    required String title,
+    this.description = const Value.absent(),
+    required DateTime createdAt,
+    this.dueDateStart = const Value.absent(),
+    this.dueDateEnd = const Value.absent(),
+    this.status = const Value.absent(),
+    this.recurring = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       clientId = Value(clientId),
+       title = Value(title),
+       createdAt = Value(createdAt);
+  static Insertable<Order> custom({
+    Expression<String>? id,
+    Expression<String>? clientId,
+    Expression<String>? title,
+    Expression<String>? description,
+    Expression<String>? createdAt,
+    Expression<String>? dueDateStart,
+    Expression<String>? dueDateEnd,
+    Expression<String>? status,
+    Expression<bool>? recurring,
+    Expression<String>? notes,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (clientId != null) 'client_id': clientId,
+      if (title != null) 'title': title,
+      if (description != null) 'description': description,
+      if (createdAt != null) 'created_at': createdAt,
+      if (dueDateStart != null) 'due_date_start': dueDateStart,
+      if (dueDateEnd != null) 'due_date_end': dueDateEnd,
+      if (status != null) 'status': status,
+      if (recurring != null) 'recurring': recurring,
+      if (notes != null) 'notes': notes,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  OrdersCompanion copyWith({
+    Value<String>? id,
+    Value<String>? clientId,
+    Value<String>? title,
+    Value<String>? description,
+    Value<DateTime>? createdAt,
+    Value<DateTime?>? dueDateStart,
+    Value<DateTime?>? dueDateEnd,
+    Value<OrderStatus>? status,
+    Value<bool>? recurring,
+    Value<String>? notes,
+    Value<int>? rowid,
+  }) {
+    return OrdersCompanion(
+      id: id ?? this.id,
+      clientId: clientId ?? this.clientId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      createdAt: createdAt ?? this.createdAt,
+      dueDateStart: dueDateStart ?? this.dueDateStart,
+      dueDateEnd: dueDateEnd ?? this.dueDateEnd,
+      status: status ?? this.status,
+      recurring: recurring ?? this.recurring,
+      notes: notes ?? this.notes,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (clientId.present) {
+      map['client_id'] = Variable<String>(clientId.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(
+        $OrdersTable.$convertercreatedAt.toSql(createdAt.value),
+      );
+    }
+    if (dueDateStart.present) {
+      map['due_date_start'] = Variable<String>(
+        $OrdersTable.$converterdueDateStartn.toSql(dueDateStart.value),
+      );
+    }
+    if (dueDateEnd.present) {
+      map['due_date_end'] = Variable<String>(
+        $OrdersTable.$converterdueDateEndn.toSql(dueDateEnd.value),
+      );
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(
+        $OrdersTable.$converterstatus.toSql(status.value),
+      );
+    }
+    if (recurring.present) {
+      map['recurring'] = Variable<bool>(recurring.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OrdersCompanion(')
+          ..write('id: $id, ')
+          ..write('clientId: $clientId, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('dueDateStart: $dueDateStart, ')
+          ..write('dueDateEnd: $dueDateEnd, ')
+          ..write('status: $status, ')
+          ..write('recurring: $recurring, ')
+          ..write('notes: $notes, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2189,6 +2812,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $InvoiceSequencesTable invoiceSequences = $InvoiceSequencesTable(
     this,
   );
+  late final $OrdersTable orders = $OrdersTable(this);
   late final Index idxInvoicesClient = Index(
     'idx_invoices_client',
     'CREATE INDEX idx_invoices_client ON invoices (client_id)',
@@ -2196,6 +2820,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final Index idxInvoicesOrder = Index(
     'idx_invoices_order',
     'CREATE INDEX idx_invoices_order ON invoices (order_id)',
+  );
+  late final Index idxOrdersClient = Index(
+    'idx_orders_client',
+    'CREATE INDEX idx_orders_client ON orders (client_id)',
   );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -2207,8 +2835,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     invoiceItems,
     settings,
     invoiceSequences,
+    orders,
     idxInvoicesClient,
     idxInvoicesOrder,
+    idxOrdersClient,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -2263,6 +2893,25 @@ final class $$ClientsTableReferences
     ).filter((f) => f.clientId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_invoicesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$OrdersTable, List<Order>> _ordersRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.orders,
+    aliasName: 'clients__id__orders__client_id',
+  );
+
+  $$OrdersTableProcessedTableManager get ordersRefs {
+    final manager = $$OrdersTableTableManager(
+      $_db,
+      $_db.orders,
+    ).filter((f) => f.clientId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_ordersRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -2335,6 +2984,31 @@ class $$ClientsTableFilterComposer
           }) => $$InvoicesTableFilterComposer(
             $db: $db,
             $table: $db.invoices,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> ordersRefs(
+    Expression<bool> Function($$OrdersTableFilterComposer f) f,
+  ) {
+    final $$OrdersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.orders,
+      getReferencedColumn: (t) => t.clientId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrdersTableFilterComposer(
+            $db: $db,
+            $table: $db.orders,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -2452,6 +3126,31 @@ class $$ClientsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> ordersRefs<T extends Object>(
+    Expression<T> Function($$OrdersTableAnnotationComposer a) f,
+  ) {
+    final $$OrdersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.orders,
+      getReferencedColumn: (t) => t.clientId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrdersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.orders,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$ClientsTableTableManager
@@ -2467,7 +3166,7 @@ class $$ClientsTableTableManager
           $$ClientsTableUpdateCompanionBuilder,
           (Client, $$ClientsTableReferences),
           Client,
-          PrefetchHooks Function({bool invoicesRefs})
+          PrefetchHooks Function({bool invoicesRefs, bool ordersRefs})
         > {
   $$ClientsTableTableManager(_$AppDatabase db, $ClientsTable table)
     : super(
@@ -2532,10 +3231,13 @@ class $$ClientsTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({invoicesRefs = false}) {
+          prefetchHooksCallback: ({invoicesRefs = false, ordersRefs = false}) {
             return PrefetchHooks(
               db: db,
-              explicitlyWatchedTables: [if (invoicesRefs) db.invoices],
+              explicitlyWatchedTables: [
+                if (invoicesRefs) db.invoices,
+                if (ordersRefs) db.orders,
+              ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
                 return [
@@ -2551,6 +3253,22 @@ class $$ClientsTableTableManager
                           ._invoicesRefsTable(db),
                       managerFromTypedResult: (p0) =>
                           $$ClientsTableReferences(db, table, p0).invoicesRefs,
+                      currentColumn: 'id',
+                      referencedColumn: 'client_id',
+                      typedResults: items,
+                    ),
+                  if (ordersRefs)
+                    await $_getPrefetchedDataByColumns<
+                      Client,
+                      $ClientsTable,
+                      Order,
+                      $OrdersTable
+                    >(
+                      currentTable: table,
+                      referencedTable: $$ClientsTableReferences
+                          ._ordersRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$ClientsTableReferences(db, table, p0).ordersRefs,
                       currentColumn: 'id',
                       referencedColumn: 'client_id',
                       typedResults: items,
@@ -2575,7 +3293,7 @@ typedef $$ClientsTableProcessedTableManager =
       $$ClientsTableUpdateCompanionBuilder,
       (Client, $$ClientsTableReferences),
       Client,
-      PrefetchHooks Function({bool invoicesRefs})
+      PrefetchHooks Function({bool invoicesRefs, bool ordersRefs})
     >;
 typedef $$InvoicesTableCreateCompanionBuilder = InvoicesCompanion Function({
   required String id,
@@ -3815,6 +4533,427 @@ typedef $$InvoiceSequencesTableProcessedTableManager =
       InvoiceSequence,
       PrefetchHooks Function()
     >;
+typedef $$OrdersTableCreateCompanionBuilder = OrdersCompanion Function({
+  required String id,
+  required String clientId,
+  required String title,
+  Value<String> description,
+  required DateTime createdAt,
+  Value<DateTime?> dueDateStart,
+  Value<DateTime?> dueDateEnd,
+  Value<OrderStatus> status,
+  Value<bool> recurring,
+  Value<String> notes,
+  Value<int> rowid,
+});
+typedef $$OrdersTableUpdateCompanionBuilder = OrdersCompanion Function({
+  Value<String> id,
+  Value<String> clientId,
+  Value<String> title,
+  Value<String> description,
+  Value<DateTime> createdAt,
+  Value<DateTime?> dueDateStart,
+  Value<DateTime?> dueDateEnd,
+  Value<OrderStatus> status,
+  Value<bool> recurring,
+  Value<String> notes,
+  Value<int> rowid,
+});
+
+final class $$OrdersTableReferences
+    extends BaseReferences<_$AppDatabase, $OrdersTable, Order> {
+  $$OrdersTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $ClientsTable _clientIdTable(_$AppDatabase db) =>
+      db.clients.createAlias('orders__client_id__clients__id');
+
+  $$ClientsTableProcessedTableManager get clientId {
+    final $_column = $_itemColumn<String>('client_id')!;
+
+    final manager = $$ClientsTableTableManager(
+      $_db,
+      $_db.clients,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_clientIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$OrdersTableFilterComposer
+    extends Composer<_$AppDatabase, $OrdersTable> {
+  $$OrdersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, String> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, String>
+  get dueDateStart => $composableBuilder(
+    column: $table.dueDateStart,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, String> get dueDateEnd =>
+      $composableBuilder(
+        column: $table.dueDateEnd,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<OrderStatus, OrderStatus, String> get status =>
+      $composableBuilder(
+        column: $table.status,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<bool> get recurring => $composableBuilder(
+    column: $table.recurring,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ClientsTableFilterComposer get clientId {
+    final $$ClientsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.clientId,
+      referencedTable: $db.clients,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ClientsTableFilterComposer(
+            $db: $db,
+            $table: $db.clients,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$OrdersTableOrderingComposer
+    extends Composer<_$AppDatabase, $OrdersTable> {
+  $$OrdersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dueDateStart => $composableBuilder(
+    column: $table.dueDateStart,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dueDateEnd => $composableBuilder(
+    column: $table.dueDateEnd,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get recurring => $composableBuilder(
+    column: $table.recurring,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ClientsTableOrderingComposer get clientId {
+    final $$ClientsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.clientId,
+      referencedTable: $db.clients,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ClientsTableOrderingComposer(
+            $db: $db,
+            $table: $db.clients,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$OrdersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $OrdersTable> {
+  $$OrdersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<DateTime, String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime?, String> get dueDateStart =>
+      $composableBuilder(
+        column: $table.dueDateStart,
+        builder: (column) => column,
+      );
+
+  GeneratedColumnWithTypeConverter<DateTime?, String> get dueDateEnd =>
+      $composableBuilder(
+        column: $table.dueDateEnd,
+        builder: (column) => column,
+      );
+
+  GeneratedColumnWithTypeConverter<OrderStatus, String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<bool> get recurring =>
+      $composableBuilder(column: $table.recurring, builder: (column) => column);
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  $$ClientsTableAnnotationComposer get clientId {
+    final $$ClientsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.clientId,
+      referencedTable: $db.clients,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ClientsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.clients,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$OrdersTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $OrdersTable,
+          Order,
+          $$OrdersTableFilterComposer,
+          $$OrdersTableOrderingComposer,
+          $$OrdersTableAnnotationComposer,
+          $$OrdersTableCreateCompanionBuilder,
+          $$OrdersTableUpdateCompanionBuilder,
+          (Order, $$OrdersTableReferences),
+          Order,
+          PrefetchHooks Function({bool clientId})
+        > {
+  $$OrdersTableTableManager(_$AppDatabase db, $OrdersTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$OrdersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$OrdersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$OrdersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> clientId = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String> description = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> dueDateStart = const Value.absent(),
+                Value<DateTime?> dueDateEnd = const Value.absent(),
+                Value<OrderStatus> status = const Value.absent(),
+                Value<bool> recurring = const Value.absent(),
+                Value<String> notes = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => OrdersCompanion(
+                id: id,
+                clientId: clientId,
+                title: title,
+                description: description,
+                createdAt: createdAt,
+                dueDateStart: dueDateStart,
+                dueDateEnd: dueDateEnd,
+                status: status,
+                recurring: recurring,
+                notes: notes,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String clientId,
+                required String title,
+                Value<String> description = const Value.absent(),
+                required DateTime createdAt,
+                Value<DateTime?> dueDateStart = const Value.absent(),
+                Value<DateTime?> dueDateEnd = const Value.absent(),
+                Value<OrderStatus> status = const Value.absent(),
+                Value<bool> recurring = const Value.absent(),
+                Value<String> notes = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => OrdersCompanion.insert(
+                id: id,
+                clientId: clientId,
+                title: title,
+                description: description,
+                createdAt: createdAt,
+                dueDateStart: dueDateStart,
+                dueDateEnd: dueDateEnd,
+                status: status,
+                recurring: recurring,
+                notes: notes,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$OrdersTable, Order>(table),
+                  $$OrdersTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({clientId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (clientId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.clientId,
+                        referencedTable: $$OrdersTableReferences._clientIdTable(
+                          db,
+                        ),
+                        referencedColumn: $$OrdersTableReferences
+                            ._clientIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$OrdersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $OrdersTable,
+      Order,
+      $$OrdersTableFilterComposer,
+      $$OrdersTableOrderingComposer,
+      $$OrdersTableAnnotationComposer,
+      $$OrdersTableCreateCompanionBuilder,
+      $$OrdersTableUpdateCompanionBuilder,
+      (Order, $$OrdersTableReferences),
+      Order,
+      PrefetchHooks Function({bool clientId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3829,4 +4968,6 @@ class $AppDatabaseManager {
       $$SettingsTableTableManager(_db, _db.settings);
   $$InvoiceSequencesTableTableManager get invoiceSequences =>
       $$InvoiceSequencesTableTableManager(_db, _db.invoiceSequences);
+  $$OrdersTableTableManager get orders =>
+      $$OrdersTableTableManager(_db, _db.orders);
 }

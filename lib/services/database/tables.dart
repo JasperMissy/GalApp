@@ -1,5 +1,7 @@
 import 'package:drift/drift.dart';
 
+import '../../models/order_status.dart';
+
 /// ISO-8601-Text-Konverter für Datumsspalten (Schema: TEXT).
 class IsoDateConverter extends TypeConverter<DateTime, String> {
   const IsoDateConverter();
@@ -81,4 +83,25 @@ class InvoiceSequences extends Table {
 
   @override
   Set<Column> get primaryKey => {year, type};
+}
+
+/// Aufträge (Vision, Abschnitt 10).
+@TableIndex(name: 'idx_orders_client', columns: {#clientId})
+class Orders extends Table {
+  TextColumn get id => text()();
+  TextColumn get clientId => text().references(Clients, #id)();
+  TextColumn get title => text()();
+  TextColumn get description => text().withDefault(const Constant(''))();
+  TextColumn get createdAt => text().map(const IsoDateConverter())();
+  TextColumn get dueDateStart =>
+      text().map(const IsoDateConverter()).nullable()();
+  TextColumn get dueDateEnd =>
+      text().map(const IsoDateConverter()).nullable()();
+  TextColumn get status => textEnum<OrderStatus>()
+      .withDefault(const Constant('offen'))();
+  BoolColumn get recurring => boolean().withDefault(const Constant(false))();
+  TextColumn get notes => text().withDefault(const Constant(''))();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }
