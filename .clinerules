@@ -1,0 +1,14 @@
+# Projekt-Regeln für GaLaBau & Baumpflege App
+
+## Core Architecture & Guidelines
+- **Strikt lokale Datenhaltung:** Keine Cloud-Dienste für Kundendaten. Alle Daten (Kunden, Aufträge, Zeiten) werden lokal gespeichert (z. B. via Hive/SQLite).
+- **Subunternehmer-Workflow:** Der Daten-Austausch zwischen Geräten erfolgt ausschließlich über lokales ZIP-Packaging (`.galabau` / `.zip`).
+- **Präzision:** Halte dich strikt an vorgegebene Datenmodelle und UI-Wünsche. Erfinde keine ungefragten Features oder Cloud-Abhängigkeiten.
+
+## Code-Qualität & Struktur (Flutter/Dart)
+- Trenne den Code sauber in Module:
+  - `lib/models/` (Nur Datenklassen inkl. `fromJson` / `toJson`)
+  - `lib/views/` (UI-Screens & Widgets)
+  - `lib/services/` (Lokaler Speicher, ZIP-Export, `.docx`-Mapper)
+- Nutze Provider oder Riverpod für das State Management.
+- Schreibe sauberen, modularisierten Dart-Code ohne ungelöste `todos`.
