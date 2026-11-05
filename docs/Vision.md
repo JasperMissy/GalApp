@@ -398,6 +398,7 @@ Vom Auftraggeber festgelegt:
 ## 12. Projektstand
 
 - Flutter-Projekt `galabau_app` mit Grundgerüst: Material 3, helles Theme (Grün/Braun, Inter), untere Navigation mit den 5 Punkten und Gerüst-Screens
-- Struktur nach `.clinerules`: `lib/models/`, `lib/views/`, `lib/services/`
+- Struktur nach `.clinerules`: bisher nur `lib/views/` (Theme, Navigationsrahmen, Gerüst-Screens). `lib/models/` und `lib/services/` entstehen mit den ersten Datenmodellen und der lokalen Speicherung.
 - Noch keine Fachlogik und keine lokale Speicherung.
+- Geprüft: `flutter analyze` ohne Befunde, 3 Widget-Tests bestanden, Web-Build erfolgreich (Inter wird eingebunden). Ein Windows-Build ist auf diesem Rechner nicht möglich, weil Visual Studio mit der C++-Desktop-Workload fehlt.
 - Referenz-Screen *Kunden* folgt als Nächstes.
