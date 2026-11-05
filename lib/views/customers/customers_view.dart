@@ -7,6 +7,7 @@ import 'package:galabau_app/services/customers/client_repository.dart';
 import 'package:galabau_app/services/orders/order_repository.dart';
 import 'package:galabau_app/views/customers/client_detail_sheet.dart';
 import 'package:galabau_app/views/customers/client_form_dialog.dart';
+import 'package:galabau_app/views/customers/order_detail_screen.dart';
 import 'package:galabau_app/views/customers/order_form_dialog.dart';
 import 'package:galabau_app/views/shared/empty_state.dart';
 import 'package:galabau_app/views/theme/app_colors.dart';
@@ -200,6 +201,7 @@ class _OrderListState extends ConsumerState<_OrderList> {
                               ),
                               title: Text(order.title),
                               subtitle: Text(_statusText(order)),
+                              onTap: () => _openOrder(context, order),
                             ),
                           );
                         },
@@ -242,6 +244,12 @@ class _OrderListState extends ConsumerState<_OrderList> {
   String _statusText(Order order) {
     final String status = order.status == OrderStatus.erledigt ? 'Erledigt' : 'Offen';
     return order.recurring ? '$status · wiederkehrend' : status;
+  }
+
+  void _openOrder(BuildContext context, Order order) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => OrderDetailScreen(order: order)),
+    );
   }
 
   Future<void> _addOrder(BuildContext context) async {
