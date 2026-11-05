@@ -26,7 +26,7 @@ Die App richtet sich an **Einzelunternehmer in der Baumpflege und im Garten- und
 - Modulstruktur:
   - `lib/models/` – nur Datenklassen inkl. `fromJson` / `toJson`
   - `lib/views/` – UI-Screens & Widgets
-  - `lib/services/` – lokaler Speicher, ZIP-Export/-Import, `.docx`-Mapper
+  - `lib/services/` – lokaler Speicher, ZIP-Export/-Import, **PDF-Generator** (Rechnung/Angebot)
 - State Management: **Provider oder Riverpod**
 - Lokale Speicherung: z. B. Hive oder SQLite
 - Sauberer, modularisierter Dart-Code ohne ungelöste `todos`
@@ -36,7 +36,7 @@ Die App richtet sich an **Einzelunternehmer in der Baumpflege und im Garten- und
 ## 2. Funktionsumfang (Kurzüberblick)
 
 1. Kunden- und Auftragsverwaltung
-2. Kalkulation, Rechnungs- und Angebotserstellung nach **individueller `.docx`-Vorlage**
+2. Kalkulation, Rechnungs- und Angebotserstellung mit **festem PDF-Layout gemäß Stammdaten** (automatische Nummern `RE-2026-0001` / `AN-2026-0001`)
 3. Rechnungsverwaltung und Buchhaltung (Einnahmen, Ausgaben, MwSt.) mit drei `.xlsx`-Tabellendokumenten (Einnahmen, Materialkosten, Personalkosten); Rechnungsimport per PDF und Erfassung von Betriebsausgaben per Beleg-Foto (Kamera)
 4. Auftragsvergabe an Subunternehmer („Auftrag teilen") mit Zeiterfassung, „Nachher-Bildern" und Anmerkungen
 5. Kollegen-Datenbank inkl. Qualifikationen
@@ -99,8 +99,8 @@ Die untere Navigationsleiste hat laut Skizze **5 Einträge** (von links nach rec
 | Funktion | Beschreibung |
 |---|---|
 | **Rechnungsverwaltung** | Ordner mit den Unterordnern **Einnahmen** und **Ausgaben** (Ausgaben unterteilt in **Materialkosten** und **Personalkosten**), siehe Abschnitt 6 |
-| **Rechnungsvorlage** | Upload der individuellen Rechnungsvorlage als `.docx` + Festlegung der Platzhalter (siehe Abschnitt 7) |
-| **Angebotsvorlage** | Dieselbe Funktion für Angebote |
+| **Rechnungsdesign** | Konfiguration statt Vorlagen-Upload: Logo, Akzentfarbe und sichtbare Blöcke einmalig in den Einstellungen hinterlegt; daraus entsteht das PDF-Layout (siehe Abschnitt 7) |
+| **Angebotsdesign** | Dieselbe Engine und dieselben Einstellungen; Angebote erhalten eigene Nummern (`AN-2026-0001`) |
 
 ### 3.6 Querverweise (Übersicht für den Nutzer)
 
@@ -162,16 +162,16 @@ Beim Speichern wird der **Auftragsordner automatisch erstellt**.
 - **Position hinzufügen:** Es öffnet sich ein Formular zur Abfrage der Rechnungsparameter.
 - **Summe + ggf. MwSt., TOTAL**
 - Aktionen: **Speichern**, **Abbrechen**, **Exportieren**
-- Option: **Angebot erstellen** nach der individuellen, hochgeladenen Vorlage als `.docx` oder `.pdf`, oder alternativ ein PDF direkt generieren
+- Option: **Angebot erstellen** – erzeugt direkt ein PDF mit demselben festen Layout (eigene Nummer `AN-2026-0001`)
 
 ### 4.5 Rechnung generieren
 
 - Aus dem Auftrag heraus über „Rechnung generieren"
-- Layout **gemäß individueller Rechnungsvorlage** (Briefkopf, Adressat: Kunde, Rechnungsnr., Datum, Rechnungspositionen, Summe + ggf. MwSt., TOTAL)
-- Es öffnet sich ein **Formular zur Eingabe der Rechnungspositionen**. Als Blueprint dient die hochgeladene `.docx`-Rechnungsvorlage mit den individuellen Rechnungsparametern.
-- Ausgabe **gemäß Rechnungsvorlage als `.pdf` oder `.docx`**
-- Die **Rechnungsnummer** gibt der Nutzer **selbst im Formular „Rechnung erstellen"** im Auftragsordner ein. Es gibt keine automatische Nummernvergabe. Die Registrierung der Rechnung findet nur bei **eigenen Aufträgen** statt.
-- Gespeichert wird unter `<Rechnungen Auftragstitel>` als bearbeitbares Formular.
+- Layout **gemäß Stammdaten** (Briefkopf, Adressat: Kunde, Rechnungsnr., Datum, Rechnungspositionen, Summe + ggf. MwSt., TOTAL); Design-Optionen (Logo, Akzentfarbe, sichtbare Blöcke) kommen aus den Einstellungen
+- Es öffnet sich ein **Formular zur Eingabe der Rechnungspositionen**; die Vorschau wird direkt aus dem festen Layout erzeugt (keine Vorlagen-Datei)
+- Ausgabe **nur als PDF**; die **Rechnungsnummer** wird **automatisch vergeben** (`RE-2026-0001`) und kann im Korrekturschritt überschrieben werden
+- Doppelte Nummern sind technisch ausgeschlossen; die Registrierung der Rechnung findet nur bei **eigenen Aufträgen** statt.
+- Gespeichert wird unter `<Rechnungen Auftragstitel>` als PDF.
 - Nach **Bestätigung durch den Nutzer** wird die Rechnung in der Rechnungsverwaltung abgelegt (siehe Abschnitt 6).
 
 ---
@@ -265,7 +265,7 @@ Rechnungen erscheinen an mehreren Stellen der App (siehe Abschnitt 3.6). Dafür 
 - **Materialrechnungen ohne Auftrag:** Importierte Materialrechnungen (PDF oder Beleg-Foto) brauchen **keinen Auftragsbezug**. Sie liegen direkt unter `Rechnungsverwaltung/Ausgaben/Materialkosten/`. Eine Zuordnung zu einem Auftrag ist optional möglich. Wird sie gewählt, bleibt die Datei trotzdem an einem Ort, der Auftragsordner zeigt sie nur als Verweis.
 - **Subunternehmer-Rechnungen ohne Auftrag:** Auch sie brauchen **keinen Auftragsbezug**. Die App bietet beim Import die Zuordnung zu einem Auftrag an, verlangt sie aber nicht. Ohne Zuordnung liegt die Datei unter `Rechnungsverwaltung/Ausgaben/Personalkosten/`. Die Rechnung bleibt der Person unter *Kollegen* zugeordnet.
 - **Importierte Einnahmen ohne erkennbaren Auftrag:** Hier fragt die App beim Import nach der Zuordnung. Das weitere Vorgehen, wenn keine Zuordnung möglich ist, ist offen (siehe Abschnitt 9).
-- **Rechnungs-ID:** Die interne Registrierung einer Rechnung mit ID findet nur bei **eigenen Aufträgen** statt. Die Rechnungsnummer gibt der Nutzer im Formular „Rechnung erstellen" selbst ein (siehe Abschnitt 4.5). Importierte Rechnungen übernehmen die Nummer aus dem PDF, soweit erkannt.
+- **Rechnungs-ID:** Die interne Registrierung einer Rechnung mit ID findet nur bei **eigenen Aufträgen** statt. Die Rechnungsnummer wird **automatisch vergeben** (`RE-2026-0001`) und ist im Korrekturschritt überschreibbar (siehe Abschnitt 4.5). Importierte Rechnungen übernehmen die Nummer aus dem PDF, soweit erkannt.
 
 ### 6.5 Import-Funktionen (wo Rechnungen importiert werden können)
 
@@ -283,16 +283,15 @@ Der Import einer Rechnung (PDF) wird an **mehreren Stellen** angeboten. Die Rech
 
 ---
 
-## 7. Vorlagensystem (Extras → Rechnungsvorlage / Angebotsvorlage)
+## 7. Rechnung & Angebot erstellen (PDF-Engine)
 
-> **Kritischer Funktionsbereich:** Dieses System muss zuverlässig funktionieren. Jeder Unternehmer baut seine Rechnung ein wenig anders auf.
+> **Technische Referenz:** `docs/Architektur-Rechnungswesen.md` – Datenbankschema, Nummernvergabe, Rechenlogik und PDF-Layout sind dort detailliert beschrieben.
 
-- Der Nutzer lädt seine **individuelle Rechnungsvorlage** bzw. **Angebotsvorlage** als **`.docx`** hoch.
-- Der Nutzer **legt die Variablen selbst fest**, z. B. Menge / Faktor / Position / … Er **markiert sie mit Platzhaltern in der Datei**.
-- Die App liest die Platzhalter aus der Vorlage und bildet daraus das Eingabeformular (Rechnungsparameter) unter *Kunden → Aufträge → Rechnung erstellen*.
-- Beim Erzeugen befüllt der `.docx`-Mapper (`lib/services/`) die Platzhalter mit den Kunden-, Auftrags- und Kalkulationsdaten.
-- Ausgabe als **`.pdf` oder `.docx`**
-- Dieselbe Logik gilt für **Angebote** (Angebotsvorlage).
+- Es gibt **keine hochgeladenen Vorlagen-Dateien** mehr. Das Layout wird **konfiguriert**: Logo, Akzentfarbe und sichtbare Blöcke (IBAN, Steuernummer, Fußzeile) werden einmalig in den Einstellungen hinterlegt; daraus entsteht das feste, professionelle PDF.
+- Die **Rechnungsnummer** wird **automatisch vergeben** (`RE-2026-0001`) und ist im Korrekturschritt überschreibbar. Doppelte Nummern sind technisch ausgeschlossen.
+- Berechnung **centgenau** (Netto, MwSt, Brutto) vor dem Speichern.
+- Ausgabe **nur als PDF**; Ablage im Auftragsordner unter `Rechnungen/`.
+- Dieselbe Engine gilt für **Angebote** (eigene Nummer `AN-2026-0001`).
 
 ---
 
@@ -317,7 +316,6 @@ Galabau-Daten/
 │       └── Personalkosten/            (chronologisch; inkl. Personalkosten.xlsx; Subunternehmer-Rechnungen ohne Auftrag)
 ├── Angebote/
 ├── Kollegen/                          (Kontaktdaten, Qualifikationen; Rechnungen nur als Verweise)
-├── Vorlagen/                          (Rechnungsvorlage.docx, Angebotsvorlage.docx, Platzhalter-Definitionen)
 └── Subunternehmer/                    (Datenpakete .galabau)
 ```
 
@@ -325,7 +323,7 @@ Galabau-Daten/
 
 ## 9. Offene Punkte (Klärungsbedarf, nicht blockierend)
 
-1. **Platzhalter-Syntax** in den `.docx`-Vorlagen (z. B. `{{Kundenname}}`) und wie der Nutzer eigene Variablen definiert.
+1. **Layout-Umfang des Rechnungs-PDFs:** Welche Blöcke sind fest, welche über die Einstellungen steuerbar (Logo, Akzentfarbe, IBAN, Steuernummer, Fußzeile)?
 2. **Tabellendokumente (`.xlsx`):** Wie werden die Dateien lokal geschrieben und aktualisiert? Was passiert, wenn der Nutzer sie parallel in LibreOffice Calc geöffnet hat oder Zeilen manuell ändert?
 3. **Personalkosten:** Die Zeiterfassung wird nicht übernommen (geklärt). Offen ist, woher die Spalten *Stunden* und *Stundenlohn* kommen: Sie müssen aus der importierten Rechnung ausgelesen oder vom Nutzer ergänzt werden. Offen ist auch, wie die Zuordnung zum *Namen* (Subunternehmer) erfolgt. Der *Auftrag* ist optional (geklärt).
 4. **Verweise (Technik):** Entschieden ist „Verweise statt Kopien" (Abschnitt 6.4). Die Rechnungs-ID-Registrierung für **eigene Rechnungen** gibt es nur bei eigenen Aufträgen. Offen ist, wie **importierte** Rechnungen (Material, Subunternehmer) intern referenziert werden, damit Verweise aus Kollegen, Auftrag und Rechnungsverwaltung stabil bleiben, auch wenn der Nutzer Dateien im Dateimanager umbenennt oder verschiebt (z. B. eine rein interne Referenz ohne Rechnungsnummer-Vergabe).
@@ -333,7 +331,7 @@ Galabau-Daten/
 6. **Beleg-Foto (Kamera):** Stufe 1 (Foto + manuelle Eingabe) ist festgelegt. Offen ist, ob und wann Stufe 2 (automatisches Auslesen per Texterkennung auf dem Gerät) umgesetzt wird. Zu klären sind Genauigkeit bei schlecht fotografierten Belegen, Bildqualität und Kameraberechtigung.
 7. **Absender-Erkennung (Paket-ID):** Das Rückpaket wird über die Paket-ID dem Auftrag und Kontakt X zugeordnet (Abschnitt 5). Offen ist der Umgang mit Sonderfällen: weitergeleitete Pakete, mehrfach zurückgesendete Pakete, Paket-ID unbekannt (z. B. Auftrag oder Kontakt gelöscht) und abweichender Name im Rückpaket. Offen ist auch, wie der Name im App-Profil hinterlegt und beim Import vorbefüllt wird.
 8. **PDF-Auslesen:** Wie zuverlässig ist die Extraktion bei unterschiedlichen Rechnungslayouts? Was passiert bei nicht erkannten Feldern (manuelle Korrektur durch den Nutzer)? Das ist für den Import aller drei Tabellen kritisch (siehe Abschnitt 6.5).
-9. **PDF-Erzeugung:** Wie wird aus der `.docx`-Vorlage lokal ein PDF erzeugt (ohne Cloud-Dienst)?
+9. **PDF-Vorschau:** Welches Rendering-Verfahren zeigt die Live-Vorschau vor dem Export an (Eigenbau oder externe Bibliothek)?
 10. **Ordnerstruktur:** Liegen Auftragsordner top-level (`Aufträge/`) oder unter dem jeweiligen Kundenordner? Die Skizze legt nahe, dass der Auftragsordner beim Anlegen eines Auftrags zu einem Kunden entsteht.
 11. **Subunternehmer-Flow:** Ein weiteres Flowdiagramm ist laut Auftraggeber nicht nötig. Offen bleibt die Konfliktbehandlung beim Import (siehe Punkt 7). Paketinhalt, Zeiterfassung per Start/Pause/Ende, Name des Subunternehmers und die Absender-Erkennung über die Paket-ID sind festgelegt.
 12. **Sicherheit der Datenpakete:** Soll ein `.galabau`-Paket zusätzlich verschlüsselt werden? (Bisher nicht gefordert.)
@@ -390,8 +388,8 @@ Vom Auftraggeber festgelegt:
 1. **Grundgerüst:** lauffähige App mit der 5-Punkt-Navigation und allen Screens als Gerüst
 2. **Referenz-Screen:** der Bereich *Kunden* wird komplett aufgebaut. Daran wird der Look abgestimmt.
 3. **Weitere Screens:** nacheinander im gleichen Stil
-4. **Fachlogik in Meilensteinen:** Datenmodelle und lokale Speicherung → Kunden und Aufträge → Kalkulation und Rechnung → Rechnungsverwaltung (`.xlsx`) → Vorlagensystem (`.docx`) → Subunternehmer-Pakete (`.galabau`) → Feinschliff
-5. **Machbarkeitsproben:** für die riskanten Teile (`.docx`-Vorlagen, `.xlsx`-Schreiben, PDF-Auslesen) vor dem Aufbau darauf
+4. **Fachlogik in Meilensteinen:** Datenmodelle und lokale Speicherung → Kunden und Aufträge → Kalkulation und Rechnung → Rechnungs-Engine (PDF, M1–M7 laut `docs/Architektur-Rechnungswesen.md`) → Rechnungsverwaltung (`.xlsx`) → Subunternehmer-Pakete (`.galabau`) → Feinschliff
+5. **Machbarkeitsproben:** für die riskanten Teile (PDF-Erzeugung, `.xlsx`-Schreiben, PDF-Auslesen) vor dem Aufbau darauf
 
 ---
 

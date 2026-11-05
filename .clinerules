@@ -9,6 +9,6 @@
 - Trenne den Code sauber in Module:
   - `lib/models/` (Nur Datenklassen inkl. `fromJson` / `toJson`)
   - `lib/views/` (UI-Screens & Widgets)
-  - `lib/services/` (Lokaler Speicher, ZIP-Export, `.docx`-Mapper)
+  - `lib/services/` (Lokaler Speicher, ZIP-Export, PDF-Generator, `.xlsx`-Mapper)
 - Nutze Provider oder Riverpod für das State Management.
 - Schreibe sauberen, modularisierten Dart-Code ohne ungelöste `todos`.
