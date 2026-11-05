@@ -131,7 +131,7 @@ Alles in **Integer-Cent**; MwSt in **Basispunkten** (1900 = 19 %):
 - **Grund-Layout fest** (unveränderliches, professionelles Gerüst), **individuell über Optionen**: Logo, Akzentfarbe, sichtbare Blöcke (IBAN, Steuernummer, Fußzeilen-Text), optionale Freitext-Felder.
 - Aufbau der Seite: Kopf (Logo links, Firmen-Stammdaten rechts) → Akzentlinie in Akzentfarbe → Adressblock (Kunde) → Metadaten (Nummer, Datum) → Positionstabelle (Pos., Bezeichnung, Menge, Einheit, EP, Gesamt) → Summenblock (Netto, MwSt-Satz, Brutto) → Zahlungsinformation (IBAN) → Fußzeile (Steuernummer/USt-IdNr., Freitext).
 - Umsetzung mit `dart:pdf` (`pdf`-Paket): Logo per `pw.MemoryImage` + `BoxFit.contain`, Akzentfarbe per `PdfColor.fromHex(settings.akzentfarbe)`, Schrift als eingebettete Inter-TTF.
-- **Live-Vorschau** in der App: Die Layout-Optionen werden sofort als Flutter-Vorschau angezeigt; die technische Umsetzung der PDF-Vorschau (Rendering) wird in Meilenstein M3 geklärt.
+- **Live-Vorschau** in der App: Die Layout-Optionen werden sofort als Flutter-Vorschau angezeigt. **Geklärt (M3):** Die Vorschau ist ein **Eigenbau-Widget** (Flutter), das das Layout nachbildet; `dart:pdf` erzeugt ausschließlich die PDF-Datei (Export).
 - Ablage: Auftragsordner → `Rechnungen/` als `RE-2026-0001.pdf` (Vision 6.4).
 
 ## 7. Korrekturschritt
@@ -180,7 +180,7 @@ Vor dem Speichern prüft der Nutzer die generierte Rechnung in einer **Vorschau*
 ## 11. Offene Punkte
 
 - **Layout-Umfang:** Welche Blöcke sind fest, welche über die Einstellungen steuerbar?
-- **Vorschau-Technik:** Eigenbau (CustomPainter) oder externe Bibliothek?
+- **Vorschau-Technik (geklärt):** Eigenbau-Widget (Flutter) für die Vorschau, `dart:pdf` für den Export.
 - **Nummern-Konflikt-UX:** Wie wird der Nutzer bei doppelter Nummer informiert?
 - **Jahreswechsel:** Sequenz je Jahr (geplant); das Verhalten beim ersten Dokument des neuen Jahres ist zu bestätigen.
 - **Rechtliche Korrektheit:** Umgang mit stornierten Rechnungen (Status `cancelled`) und nachträglichen Änderungen.
