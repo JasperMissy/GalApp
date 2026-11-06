@@ -23,6 +23,14 @@ class OrderPackageRepository {
             ),
           );
 
+  /// Ein einzelnes Paket anhand seiner Paket-ID (oder null).
+  Future<model.OrderPackage?> getByPackageId(String id) async {
+    final row = await (db.select(db.orderPackages)
+          ..where((t) => t.id.equals(id)))
+        .getSingleOrNull();
+    return row == null ? null : _toModel(row);
+  }
+
   /// Pakete eines Auftrags, neueste zuerst.
   Stream<List<model.OrderPackage>> watchByOrder(String orderId) {
     final query = (db.select(db.orderPackages)

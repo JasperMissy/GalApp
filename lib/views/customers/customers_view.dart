@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
@@ -5,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:galabau_app/models/client.dart';
 import 'package:galabau_app/models/order.dart';
+import 'package:galabau_app/models/order_package.dart';
 import 'package:galabau_app/models/order_status.dart';
 import 'package:galabau_app/services/customers/client_repository.dart';
 import 'package:galabau_app/services/id_generator.dart';
@@ -13,6 +15,8 @@ import 'package:galabau_app/services/orders/order_package_repository.dart';
 import 'package:galabau_app/services/orders/order_repository.dart';
 import 'package:galabau_app/services/packages/order_import_service.dart';
 import 'package:galabau_app/services/packages/package_service.dart';
+import 'package:galabau_app/services/work/work_media_service.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:galabau_app/views/customers/client_detail_sheet.dart';
 import 'package:galabau_app/views/customers/client_form_dialog.dart';
 import 'package:galabau_app/views/customers/order_detail_screen.dart';
@@ -90,9 +94,13 @@ class CustomersView extends ConsumerWidget {
       );
       return;
     }
+    if (content.manifest.type == 'rückmeldung') {
+      await _importFeedback(context, ref, content);
+      return;
+    }
     if (content.manifest.type != 'auftrag') {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Kein Auftrags-Paket.')),
+        const SnackBar(content: Text('Unbekannter Paket-Typ.')),
       );
       return;
     }
@@ -114,6 +122,57 @@ class CustomersView extends ConsumerWidget {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Auftrag importiert (externe Aufträge).')),
+      );
+    }
+  }
+
+  Future<void> _importFeedback(
+    BuildContext context,
+    WidgetRef ref,
+    PackageContent content,
+  ) async {
+    final String packageId = content.manifest.id;
+    final OrderPackage? pkg = await ref
+        .read(orderPackageRepositoryProvider)
+        .getByPackageId(packageId);
+    if (!context.mounted) return;
+    if (pkg == null || pkg.orderId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kein passender Auftrag gefunden.')),
+      );
+      return;
+    }
+
+    final Order? order =
+        await ref.read(orderRepositoryProvider).getById(pkg.orderId!);
+    if (!context.mounted) return;
+    if (order == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Auftrag nicht gefunden.')),
+      );
+      return;
+    }
+
+    final Directory base = await getApplicationDocumentsDirectory();
+    final WorkMediaService mediaService = WorkMediaService(baseDirectory: base);
+
+    for (final MapEntry<String, Uint8List> entry in content.files.entries) {
+      final int slash = entry.key.indexOf('/');
+      final String subfolder =
+          slash >= 0 ? entry.key.substring(0, slash) : '';
+      final String fileName =
+          slash >= 0 ? entry.key.substring(slash + 1) : entry.key;
+      await mediaService.saveMedia(
+        orderTitle: order.title,
+        subfolder: subfolder,
+        fileName: fileName,
+        bytes: entry.value,
+      );
+    }
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Rückmeldung erhalten und zugeordnet.')),
       );
     }
   }

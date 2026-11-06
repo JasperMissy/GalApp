@@ -39,4 +39,21 @@ void main() {
     expect(forOrder.single.colleagueId, 'm-1');
     expect(forOrder.single.direction, 'outgoing');
   });
+
+  test('getByPackageId findet ein Paket', () async {
+    await repo.insert(model.OrderPackage(
+      id: 'pkg-1',
+      orderId: 'a-1',
+      colleagueId: 'm-1',
+      direction: 'outgoing',
+      status: 'sent',
+      createdAt: DateTime(2026, 11, 5, 10),
+    ));
+
+    final model.OrderPackage? pkg = await repo.getByPackageId('pkg-1');
+    expect(pkg, isNotNull);
+    expect(pkg!.orderId, 'a-1');
+
+    expect(await repo.getByPackageId('unbekannt'), isNull);
+  });
 }
