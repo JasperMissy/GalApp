@@ -11,6 +11,7 @@ import 'package:galabau_app/views/shared/empty_state.dart';
 import 'package:galabau_app/views/shared/error_state.dart';
 import 'package:galabau_app/views/theme/app_colors.dart';
 
+import 'calculation_screen.dart';
 import 'invoice_form_dialog.dart';
 import 'order_form_dialog.dart';
 
@@ -23,7 +24,7 @@ class OrderDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: Scaffold(
         appBar: AppBar(
           title: Text(order.title),
@@ -40,6 +41,7 @@ class OrderDetailScreen extends ConsumerWidget {
           bottom: const TabBar(
             isScrollable: true,
             tabs: <Widget>[
+              Tab(text: 'Kalkulation'),
               Tab(text: 'Auftragsdetails'),
               Tab(text: 'Arbeitsdokumentation'),
               Tab(text: 'Assoziierte Rechnungen'),
@@ -49,6 +51,7 @@ class OrderDetailScreen extends ConsumerWidget {
         ),
         body: TabBarView(
           children: <Widget>[
+            CalculationScreen(order: order),
             _DetailsTab(order: order),
             const EmptyState(
               icon: Icons.photo_camera_outlined,
