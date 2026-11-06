@@ -6,6 +6,12 @@
 	<true/>
 	<key>NSContactsUsageDescription</key>
 	<string>Zum Importieren von Kunden und Kollegen aus dem Adressbuch.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Für Sprachmemos in der Arbeitsdokumentation.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Für Fotos und Videos in der Arbeitsdokumentation.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Zum Auswählen von Fotos und Videos.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
