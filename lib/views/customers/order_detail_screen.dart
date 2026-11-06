@@ -29,6 +29,7 @@ import 'package:share_plus/share_plus.dart';
 import 'calculation_screen.dart';
 import 'invoice_form_dialog.dart';
 import 'order_form_dialog.dart';
+import 'work_documentation_tab.dart';
 
 /// Auftragsordner mit den vier Unterordnern (Vision, Abschnitt 4.3).
 class OrderDetailScreen extends ConsumerWidget {
@@ -73,11 +74,7 @@ class OrderDetailScreen extends ConsumerWidget {
           children: <Widget>[
             CalculationScreen(order: order),
             _DetailsTab(order: order),
-            const EmptyState(
-              icon: Icons.photo_camera_outlined,
-              title: 'Arbeitsdokumentation',
-              message: 'Nachher-Bilder, Zeiterfassung und Anmerkungen folgen.',
-            ),
+            WorkDocumentationTab(orderId: order.id),
             const EmptyState(
               icon: Icons.attach_file_outlined,
               title: 'Assoziierte Rechnungen',

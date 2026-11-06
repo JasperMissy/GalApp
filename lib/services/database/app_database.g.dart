@@ -4242,6 +4242,637 @@ class ColleaguesCompanion extends UpdateCompanion<Colleague> {
   }
 }
 
+class $WorkTimeEntriesTable extends WorkTimeEntries
+    with TableInfo<$WorkTimeEntriesTable, WorkTimeEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WorkTimeEntriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _orderIdMeta = const VerificationMeta(
+    'orderId',
+  );
+  @override
+  late final GeneratedColumn<String> orderId = GeneratedColumn<String>(
+    'order_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, String> startedAt =
+      GeneratedColumn<String>(
+        'started_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($WorkTimeEntriesTable.$converterstartedAt);
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime?, String> endedAt =
+      GeneratedColumn<String>(
+        'ended_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      ).withConverter<DateTime?>($WorkTimeEntriesTable.$converterendedAtn);
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, String> createdAt =
+      GeneratedColumn<String>(
+        'created_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($WorkTimeEntriesTable.$convertercreatedAt);
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    orderId,
+    startedAt,
+    endedAt,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'work_time_entries';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WorkTimeEntry> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('order_id')) {
+      context.handle(
+        _orderIdMeta,
+        orderId.isAcceptableOrUnknown(data['order_id']!, _orderIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_orderIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  WorkTimeEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WorkTimeEntry(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      orderId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}order_id'],
+      )!,
+      startedAt: $WorkTimeEntriesTable.$converterstartedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}started_at'],
+        )!,
+      ),
+      endedAt: $WorkTimeEntriesTable.$converterendedAtn.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}ended_at'],
+        ),
+      ),
+      createdAt: $WorkTimeEntriesTable.$convertercreatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}created_at'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $WorkTimeEntriesTable createAlias(String alias) {
+    return $WorkTimeEntriesTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, String> $converterstartedAt =
+      const IsoDateConverter();
+  static TypeConverter<DateTime, String> $converterendedAt =
+      const IsoDateConverter();
+  static TypeConverter<DateTime?, String?> $converterendedAtn =
+      NullAwareTypeConverter.wrap($converterendedAt);
+  static TypeConverter<DateTime, String> $convertercreatedAt =
+      const IsoDateConverter();
+}
+
+class WorkTimeEntry extends DataClass implements Insertable<WorkTimeEntry> {
+  final String id;
+  final String orderId;
+  final DateTime startedAt;
+  final DateTime? endedAt;
+  final DateTime createdAt;
+  const WorkTimeEntry({
+    required this.id,
+    required this.orderId,
+    required this.startedAt,
+    this.endedAt,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['order_id'] = Variable<String>(orderId);
+    {
+      map['started_at'] = Variable<String>(
+        $WorkTimeEntriesTable.$converterstartedAt.toSql(startedAt),
+      );
+    }
+    if (!nullToAbsent || endedAt != null) {
+      map['ended_at'] = Variable<String>(
+        $WorkTimeEntriesTable.$converterendedAtn.toSql(endedAt),
+      );
+    }
+    {
+      map['created_at'] = Variable<String>(
+        $WorkTimeEntriesTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
+    return map;
+  }
+
+  WorkTimeEntriesCompanion toCompanion(bool nullToAbsent) {
+    return WorkTimeEntriesCompanion(
+      id: Value(id),
+      orderId: Value(orderId),
+      startedAt: Value(startedAt),
+      endedAt: endedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endedAt),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory WorkTimeEntry.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WorkTimeEntry(
+      id: serializer.fromJson<String>(json['id']),
+      orderId: serializer.fromJson<String>(json['orderId']),
+      startedAt: serializer.fromJson<DateTime>(json['startedAt']),
+      endedAt: serializer.fromJson<DateTime?>(json['endedAt']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'orderId': serializer.toJson<String>(orderId),
+      'startedAt': serializer.toJson<DateTime>(startedAt),
+      'endedAt': serializer.toJson<DateTime?>(endedAt),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  WorkTimeEntry copyWith({
+    String? id,
+    String? orderId,
+    DateTime? startedAt,
+    Value<DateTime?> endedAt = const Value.absent(),
+    DateTime? createdAt,
+  }) => WorkTimeEntry(
+    id: id ?? this.id,
+    orderId: orderId ?? this.orderId,
+    startedAt: startedAt ?? this.startedAt,
+    endedAt: endedAt.present ? endedAt.value : this.endedAt,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  WorkTimeEntry copyWithCompanion(WorkTimeEntriesCompanion data) {
+    return WorkTimeEntry(
+      id: data.id.present ? data.id.value : this.id,
+      orderId: data.orderId.present ? data.orderId.value : this.orderId,
+      startedAt: data.startedAt.present ? data.startedAt.value : this.startedAt,
+      endedAt: data.endedAt.present ? data.endedAt.value : this.endedAt,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WorkTimeEntry(')
+          ..write('id: $id, ')
+          ..write('orderId: $orderId, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('endedAt: $endedAt, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, orderId, startedAt, endedAt, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WorkTimeEntry &&
+          other.id == this.id &&
+          other.orderId == this.orderId &&
+          other.startedAt == this.startedAt &&
+          other.endedAt == this.endedAt &&
+          other.createdAt == this.createdAt);
+}
+
+class WorkTimeEntriesCompanion extends UpdateCompanion<WorkTimeEntry> {
+  final Value<String> id;
+  final Value<String> orderId;
+  final Value<DateTime> startedAt;
+  final Value<DateTime?> endedAt;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const WorkTimeEntriesCompanion({
+    this.id = const Value.absent(),
+    this.orderId = const Value.absent(),
+    this.startedAt = const Value.absent(),
+    this.endedAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  WorkTimeEntriesCompanion.insert({
+    required String id,
+    required String orderId,
+    required DateTime startedAt,
+    this.endedAt = const Value.absent(),
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       orderId = Value(orderId),
+       startedAt = Value(startedAt),
+       createdAt = Value(createdAt);
+  static Insertable<WorkTimeEntry> custom({
+    Expression<String>? id,
+    Expression<String>? orderId,
+    Expression<String>? startedAt,
+    Expression<String>? endedAt,
+    Expression<String>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (orderId != null) 'order_id': orderId,
+      if (startedAt != null) 'started_at': startedAt,
+      if (endedAt != null) 'ended_at': endedAt,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  WorkTimeEntriesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? orderId,
+    Value<DateTime>? startedAt,
+    Value<DateTime?>? endedAt,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return WorkTimeEntriesCompanion(
+      id: id ?? this.id,
+      orderId: orderId ?? this.orderId,
+      startedAt: startedAt ?? this.startedAt,
+      endedAt: endedAt ?? this.endedAt,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (orderId.present) {
+      map['order_id'] = Variable<String>(orderId.value);
+    }
+    if (startedAt.present) {
+      map['started_at'] = Variable<String>(
+        $WorkTimeEntriesTable.$converterstartedAt.toSql(startedAt.value),
+      );
+    }
+    if (endedAt.present) {
+      map['ended_at'] = Variable<String>(
+        $WorkTimeEntriesTable.$converterendedAtn.toSql(endedAt.value),
+      );
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(
+        $WorkTimeEntriesTable.$convertercreatedAt.toSql(createdAt.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WorkTimeEntriesCompanion(')
+          ..write('id: $id, ')
+          ..write('orderId: $orderId, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('endedAt: $endedAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $WorkNotesTable extends WorkNotes
+    with TableInfo<$WorkNotesTable, WorkNote> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WorkNotesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _orderIdMeta = const VerificationMeta(
+    'orderId',
+  );
+  @override
+  late final GeneratedColumn<String> orderId = GeneratedColumn<String>(
+    'order_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _contentMeta = const VerificationMeta(
+    'content',
+  );
+  @override
+  late final GeneratedColumn<String> content = GeneratedColumn<String>(
+    'content',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, String> updatedAt =
+      GeneratedColumn<String>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($WorkNotesTable.$converterupdatedAt);
+  @override
+  List<GeneratedColumn> get $columns => [orderId, content, updatedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'work_notes';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WorkNote> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('order_id')) {
+      context.handle(
+        _orderIdMeta,
+        orderId.isAcceptableOrUnknown(data['order_id']!, _orderIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_orderIdMeta);
+    }
+    if (data.containsKey('content')) {
+      context.handle(
+        _contentMeta,
+        content.isAcceptableOrUnknown(data['content']!, _contentMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {orderId};
+  @override
+  WorkNote map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WorkNote(
+      orderId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}order_id'],
+      )!,
+      content: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}content'],
+      )!,
+      updatedAt: $WorkNotesTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $WorkNotesTable createAlias(String alias) {
+    return $WorkNotesTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, String> $converterupdatedAt =
+      const IsoDateConverter();
+}
+
+class WorkNote extends DataClass implements Insertable<WorkNote> {
+  final String orderId;
+  final String content;
+  final DateTime updatedAt;
+  const WorkNote({
+    required this.orderId,
+    required this.content,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['order_id'] = Variable<String>(orderId);
+    map['content'] = Variable<String>(content);
+    {
+      map['updated_at'] = Variable<String>(
+        $WorkNotesTable.$converterupdatedAt.toSql(updatedAt),
+      );
+    }
+    return map;
+  }
+
+  WorkNotesCompanion toCompanion(bool nullToAbsent) {
+    return WorkNotesCompanion(
+      orderId: Value(orderId),
+      content: Value(content),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory WorkNote.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WorkNote(
+      orderId: serializer.fromJson<String>(json['orderId']),
+      content: serializer.fromJson<String>(json['content']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'orderId': serializer.toJson<String>(orderId),
+      'content': serializer.toJson<String>(content),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  WorkNote copyWith({String? orderId, String? content, DateTime? updatedAt}) =>
+      WorkNote(
+        orderId: orderId ?? this.orderId,
+        content: content ?? this.content,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  WorkNote copyWithCompanion(WorkNotesCompanion data) {
+    return WorkNote(
+      orderId: data.orderId.present ? data.orderId.value : this.orderId,
+      content: data.content.present ? data.content.value : this.content,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WorkNote(')
+          ..write('orderId: $orderId, ')
+          ..write('content: $content, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(orderId, content, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WorkNote &&
+          other.orderId == this.orderId &&
+          other.content == this.content &&
+          other.updatedAt == this.updatedAt);
+}
+
+class WorkNotesCompanion extends UpdateCompanion<WorkNote> {
+  final Value<String> orderId;
+  final Value<String> content;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const WorkNotesCompanion({
+    this.orderId = const Value.absent(),
+    this.content = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  WorkNotesCompanion.insert({
+    required String orderId,
+    this.content = const Value.absent(),
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : orderId = Value(orderId),
+       updatedAt = Value(updatedAt);
+  static Insertable<WorkNote> custom({
+    Expression<String>? orderId,
+    Expression<String>? content,
+    Expression<String>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (orderId != null) 'order_id': orderId,
+      if (content != null) 'content': content,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  WorkNotesCompanion copyWith({
+    Value<String>? orderId,
+    Value<String>? content,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return WorkNotesCompanion(
+      orderId: orderId ?? this.orderId,
+      content: content ?? this.content,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (orderId.present) {
+      map['order_id'] = Variable<String>(orderId.value);
+    }
+    if (content.present) {
+      map['content'] = Variable<String>(content.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(
+        $WorkNotesTable.$converterupdatedAt.toSql(updatedAt.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WorkNotesCompanion(')
+          ..write('orderId: $orderId, ')
+          ..write('content: $content, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4255,6 +4886,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $OrdersTable orders = $OrdersTable(this);
   late final $OrderPackagesTable orderPackages = $OrderPackagesTable(this);
   late final $ColleaguesTable colleagues = $ColleaguesTable(this);
+  late final $WorkTimeEntriesTable workTimeEntries = $WorkTimeEntriesTable(
+    this,
+  );
+  late final $WorkNotesTable workNotes = $WorkNotesTable(this);
   late final Index idxInvoicesClient = Index(
     'idx_invoices_client',
     'CREATE INDEX idx_invoices_client ON invoices (client_id)',
@@ -4280,6 +4915,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     orders,
     orderPackages,
     colleagues,
+    workTimeEntries,
+    workNotes,
     idxInvoicesClient,
     idxInvoicesOrder,
     idxOrdersClient,
@@ -7110,6 +7747,384 @@ typedef $$ColleaguesTableProcessedTableManager =
       Colleague,
       PrefetchHooks Function()
     >;
+typedef $$WorkTimeEntriesTableCreateCompanionBuilder =
+    WorkTimeEntriesCompanion Function({
+      required String id,
+      required String orderId,
+      required DateTime startedAt,
+      Value<DateTime?> endedAt,
+      required DateTime createdAt,
+      Value<int> rowid,
+    });
+typedef $$WorkTimeEntriesTableUpdateCompanionBuilder =
+    WorkTimeEntriesCompanion Function({
+      Value<String> id,
+      Value<String> orderId,
+      Value<DateTime> startedAt,
+      Value<DateTime?> endedAt,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$WorkTimeEntriesTableFilterComposer
+    extends Composer<_$AppDatabase, $WorkTimeEntriesTable> {
+  $$WorkTimeEntriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get orderId => $composableBuilder(
+    column: $table.orderId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, String> get startedAt =>
+      $composableBuilder(
+        column: $table.startedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, String> get endedAt =>
+      $composableBuilder(
+        column: $table.endedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, String> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+}
+
+class $$WorkTimeEntriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $WorkTimeEntriesTable> {
+  $$WorkTimeEntriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get orderId => $composableBuilder(
+    column: $table.orderId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get startedAt => $composableBuilder(
+    column: $table.startedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get endedAt => $composableBuilder(
+    column: $table.endedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$WorkTimeEntriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $WorkTimeEntriesTable> {
+  $$WorkTimeEntriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get orderId =>
+      $composableBuilder(column: $table.orderId, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, String> get startedAt =>
+      $composableBuilder(column: $table.startedAt, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime?, String> get endedAt =>
+      $composableBuilder(column: $table.endedAt, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$WorkTimeEntriesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $WorkTimeEntriesTable,
+          WorkTimeEntry,
+          $$WorkTimeEntriesTableFilterComposer,
+          $$WorkTimeEntriesTableOrderingComposer,
+          $$WorkTimeEntriesTableAnnotationComposer,
+          $$WorkTimeEntriesTableCreateCompanionBuilder,
+          $$WorkTimeEntriesTableUpdateCompanionBuilder,
+          (
+            WorkTimeEntry,
+            BaseReferences<_$AppDatabase, $WorkTimeEntriesTable, WorkTimeEntry>,
+          ),
+          WorkTimeEntry,
+          PrefetchHooks Function()
+        > {
+  $$WorkTimeEntriesTableTableManager(
+    _$AppDatabase db,
+    $WorkTimeEntriesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$WorkTimeEntriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$WorkTimeEntriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$WorkTimeEntriesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> orderId = const Value.absent(),
+                Value<DateTime> startedAt = const Value.absent(),
+                Value<DateTime?> endedAt = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => WorkTimeEntriesCompanion(
+                id: id,
+                orderId: orderId,
+                startedAt: startedAt,
+                endedAt: endedAt,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String orderId,
+                required DateTime startedAt,
+                Value<DateTime?> endedAt = const Value.absent(),
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => WorkTimeEntriesCompanion.insert(
+                id: id,
+                orderId: orderId,
+                startedAt: startedAt,
+                endedAt: endedAt,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$WorkTimeEntriesTable, WorkTimeEntry>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $WorkTimeEntriesTable,
+                    WorkTimeEntry
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$WorkTimeEntriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $WorkTimeEntriesTable,
+      WorkTimeEntry,
+      $$WorkTimeEntriesTableFilterComposer,
+      $$WorkTimeEntriesTableOrderingComposer,
+      $$WorkTimeEntriesTableAnnotationComposer,
+      $$WorkTimeEntriesTableCreateCompanionBuilder,
+      $$WorkTimeEntriesTableUpdateCompanionBuilder,
+      (
+        WorkTimeEntry,
+        BaseReferences<_$AppDatabase, $WorkTimeEntriesTable, WorkTimeEntry>,
+      ),
+      WorkTimeEntry,
+      PrefetchHooks Function()
+    >;
+typedef $$WorkNotesTableCreateCompanionBuilder = WorkNotesCompanion Function({
+  required String orderId,
+  Value<String> content,
+  required DateTime updatedAt,
+  Value<int> rowid,
+});
+typedef $$WorkNotesTableUpdateCompanionBuilder = WorkNotesCompanion Function({
+  Value<String> orderId,
+  Value<String> content,
+  Value<DateTime> updatedAt,
+  Value<int> rowid,
+});
+
+class $$WorkNotesTableFilterComposer
+    extends Composer<_$AppDatabase, $WorkNotesTable> {
+  $$WorkNotesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get orderId => $composableBuilder(
+    column: $table.orderId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get content => $composableBuilder(
+    column: $table.content,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, String> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+}
+
+class $$WorkNotesTableOrderingComposer
+    extends Composer<_$AppDatabase, $WorkNotesTable> {
+  $$WorkNotesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get orderId => $composableBuilder(
+    column: $table.orderId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get content => $composableBuilder(
+    column: $table.content,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$WorkNotesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $WorkNotesTable> {
+  $$WorkNotesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get orderId =>
+      $composableBuilder(column: $table.orderId, builder: (column) => column);
+
+  GeneratedColumn<String> get content =>
+      $composableBuilder(column: $table.content, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$WorkNotesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $WorkNotesTable,
+          WorkNote,
+          $$WorkNotesTableFilterComposer,
+          $$WorkNotesTableOrderingComposer,
+          $$WorkNotesTableAnnotationComposer,
+          $$WorkNotesTableCreateCompanionBuilder,
+          $$WorkNotesTableUpdateCompanionBuilder,
+          (WorkNote, BaseReferences<_$AppDatabase, $WorkNotesTable, WorkNote>),
+          WorkNote,
+          PrefetchHooks Function()
+        > {
+  $$WorkNotesTableTableManager(_$AppDatabase db, $WorkNotesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$WorkNotesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$WorkNotesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$WorkNotesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> orderId = const Value.absent(),
+                Value<String> content = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => WorkNotesCompanion(
+                orderId: orderId,
+                content: content,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String orderId,
+                Value<String> content = const Value.absent(),
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => WorkNotesCompanion.insert(
+                orderId: orderId,
+                content: content,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$WorkNotesTable, WorkNote>(table),
+                  BaseReferences<_$AppDatabase, $WorkNotesTable, WorkNote>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$WorkNotesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $WorkNotesTable,
+      WorkNote,
+      $$WorkNotesTableFilterComposer,
+      $$WorkNotesTableOrderingComposer,
+      $$WorkNotesTableAnnotationComposer,
+      $$WorkNotesTableCreateCompanionBuilder,
+      $$WorkNotesTableUpdateCompanionBuilder,
+      (WorkNote, BaseReferences<_$AppDatabase, $WorkNotesTable, WorkNote>),
+      WorkNote,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -7130,4 +8145,8 @@ class $AppDatabaseManager {
       $$OrderPackagesTableTableManager(_db, _db.orderPackages);
   $$ColleaguesTableTableManager get colleagues =>
       $$ColleaguesTableTableManager(_db, _db.colleagues);
+  $$WorkTimeEntriesTableTableManager get workTimeEntries =>
+      $$WorkTimeEntriesTableTableManager(_db, _db.workTimeEntries);
+  $$WorkNotesTableTableManager get workNotes =>
+      $$WorkNotesTableTableManager(_db, _db.workNotes);
 }

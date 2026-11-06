@@ -160,3 +160,25 @@ class Colleagues extends Table {
   @override
   Set<Column> get primaryKey => {id};
 }
+
+/// Zeiterfassung zur Arbeitsdokumentation (Subunternehmer-Workflow).
+class WorkTimeEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get orderId => text()();
+  TextColumn get startedAt => text().map(const IsoDateConverter())();
+  TextColumn get endedAt => text().map(const IsoDateConverter()).nullable()();
+  TextColumn get createdAt => text().map(const IsoDateConverter())();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Anmerkung zur Arbeitsdokumentation (ein Text je Auftrag).
+class WorkNotes extends Table {
+  TextColumn get orderId => text()();
+  TextColumn get content => text().withDefault(const Constant(''))();
+  TextColumn get updatedAt => text().map(const IsoDateConverter())();
+
+  @override
+  Set<Column> get primaryKey => {orderId};
+}
