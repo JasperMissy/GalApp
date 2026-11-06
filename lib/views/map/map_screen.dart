@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:galabau_app/models/client.dart';
+import 'package:galabau_app/models/colleague.dart';
 import 'package:galabau_app/models/order.dart';
+import 'package:galabau_app/services/colleagues/colleague_repository.dart';
 import 'package:galabau_app/services/customers/client_repository.dart';
 import 'package:galabau_app/services/map/map_marker_builder.dart';
 import 'package:galabau_app/services/orders/order_repository.dart';
@@ -27,6 +29,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   Widget build(BuildContext context) {
     final AsyncValue<List<Client>> clients = ref.watch(clientsProvider);
     final AsyncValue<List<Order>> orders = ref.watch(ordersProvider);
+    final AsyncValue<List<Colleague>> colleagues =
+        ref.watch(colleaguesProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -52,27 +56,20 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           ),
         ),
       ),
-      body: _buildBody(clients, orders),
+      body: _buildBody(clients, orders, colleagues),
     );
   }
 
   Widget _buildBody(
     AsyncValue<List<Client>> clients,
     AsyncValue<List<Order>> orders,
+    AsyncValue<List<Colleague>> colleagues,
   ) {
-    if (_filter == MapFilter.kollegen) {
-      return const EmptyState(
-        icon: Icons.groups_outlined,
-        title: 'Noch keine Kollegen',
-        message: 'Die Kollegen-Übersicht folgt mit der Kollegen-Datenbank.',
-      );
-    }
-
-    if (clients.isLoading || orders.isLoading) {
+    if (clients.isLoading || orders.isLoading || colleagues.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (clients.hasError || orders.hasError) {
+    if (clients.hasError || orders.hasError || colleagues.hasError) {
       return const EmptyState(
         icon: Icons.error_outline,
         title: 'Daten nicht verfügbar',
@@ -83,6 +80,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     final List<MapMarkerData> markers = buildMapMarkers(
       clients: clients.value ?? const <Client>[],
       orders: orders.value ?? const <Order>[],
+      colleagues: colleagues.value ?? const <Colleague>[],
       filter: _filter,
     );
 
@@ -120,11 +118,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                     const Icon(Icons.info_outline),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
-                        _filter == MapFilter.kunden
-                            ? 'Noch keine Kunden mit Adresse. Legen Sie Kunden an.'
-                            : 'Noch keine offenen Aufträge mit Adresse.',
-                      ),
+                      child: Text(_emptyHint(_filter)),
                     ),
                   ],
                 ),
@@ -205,5 +199,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         MapFilter.kunden => 'Kunden',
         MapFilter.offeneAuftraege => 'Offene Aufträge',
         MapFilter.kollegen => 'Kollegen',
+      };
+
+  String _emptyHint(MapFilter f) => switch (f) {
+        MapFilter.kunden =>
+          'Noch keine Kunden mit Adresse. Legen Sie Kunden an.',
+        MapFilter.offeneAuftraege => 'Noch keine offenen Aufträge mit Adresse.',
+        MapFilter.kollegen => 'Noch keine Kollegen mit Adresse. Legen Sie Kollegen an.',
       };
 }

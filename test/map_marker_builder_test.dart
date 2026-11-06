@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:galabau_app/models/client.dart';
+import 'package:galabau_app/models/colleague.dart';
 import 'package:galabau_app/models/order.dart';
 import 'package:galabau_app/models/order_status.dart';
 import 'package:galabau_app/services/map/map_marker_builder.dart';
@@ -12,6 +13,22 @@ Client _client(String id, String name, {double? lat, double? lon}) => Client(
       city: 'Ort',
       phone: '',
       email: '',
+      createdAt: DateTime(2026),
+      lat: lat,
+      lon: lon,
+    );
+
+Colleague _colleague(String id, String name, {double? lat, double? lon}) =>
+    Colleague(
+      id: id,
+      name: name,
+      street: 'Straße 1',
+      zip: '12345',
+      city: 'Ort',
+      phone: '',
+      email: '',
+      qualifications: const [],
+      notes: '',
       createdAt: DateTime(2026),
       lat: lat,
       lon: lon,
@@ -42,6 +59,7 @@ void main() {
     final List<MapMarkerData> markers = buildMapMarkers(
       clients: clients,
       orders: const <Order>[],
+      colleagues: const <Colleague>[],
       filter: MapFilter.kunden,
     );
 
@@ -64,6 +82,7 @@ void main() {
     final List<MapMarkerData> markers = buildMapMarkers(
       clients: clients,
       orders: orders,
+      colleagues: const <Colleague>[],
       filter: MapFilter.offeneAuftraege,
     );
 
@@ -74,13 +93,23 @@ void main() {
     expect(markers.single.lon, 2.0);
   });
 
-  test('kollegen: noch leer', () {
+  test('kollegen: nur Kollegen mit Koordinaten', () {
+    final List<Colleague> colleagues = <Colleague>[
+      _colleague('m1', 'Mit Koordinaten', lat: 5.0, lon: 6.0),
+      _colleague('m2', 'Ohne Koordinaten'),
+    ];
+
     final List<MapMarkerData> markers = buildMapMarkers(
-      clients: <Client>[_client('a', 'A', lat: 1.0, lon: 2.0)],
+      clients: const <Client>[],
       orders: const <Order>[],
+      colleagues: colleagues,
       filter: MapFilter.kollegen,
     );
 
-    expect(markers, isEmpty);
+    expect(markers, hasLength(1));
+    expect(markers.single.title, 'Mit Koordinaten');
+    expect(markers.single.kind, MapMarkerKind.kollege);
+    expect(markers.single.lat, 5.0);
+    expect(markers.single.lon, 6.0);
   });
 }

@@ -1,4 +1,5 @@
 import '../../models/client.dart';
+import '../../models/colleague.dart';
 import '../../models/order.dart';
 import '../../models/order_status.dart';
 
@@ -32,6 +33,7 @@ class MapMarkerData {
 List<MapMarkerData> buildMapMarkers({
   required List<Client> clients,
   required List<Order> orders,
+  required List<Colleague> colleagues,
   required MapFilter filter,
 }) {
   final Map<String, Client> byId = <String, Client>{
@@ -49,7 +51,7 @@ List<MapMarkerData> buildMapMarkers({
           lat: lat,
           lon: lon,
           title: c.name,
-          subtitle: _address(c),
+          subtitle: _address(c.street, c.zip, c.city),
           kind: MapMarkerKind.kunde,
         ));
       }
@@ -70,10 +72,21 @@ List<MapMarkerData> buildMapMarkers({
         ));
       }
     case MapFilter.kollegen:
-      break;
+      for (final Colleague c in colleagues) {
+        final double? lat = c.lat;
+        final double? lon = c.lon;
+        if (lat == null || lon == null) continue;
+        result.add(MapMarkerData(
+          lat: lat,
+          lon: lon,
+          title: c.name,
+          subtitle: _address(c.street, c.zip, c.city),
+          kind: MapMarkerKind.kollege,
+        ));
+      }
   }
 
   return result;
 }
 
-String _address(Client c) => '${c.street}, ${c.zip} ${c.city}';
+String _address(String street, String zip, String city) => '$street, $zip $city';
