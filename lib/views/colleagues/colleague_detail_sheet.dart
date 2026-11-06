@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:galabau_app/models/colleague.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'colleague_invoices_screen.dart';
+
 /// Kollegendetails mit Qualifikationen und Schnellaktionen (Anrufen,
 /// Navigation, E-Mail) sowie einem Platzhalter für den Rechnungsordner.
 class ColleagueDetailSheet extends StatelessWidget {
@@ -79,17 +81,17 @@ class ColleagueDetailSheet extends StatelessWidget {
                 style: TextStyle(fontWeight: FontWeight.w600)),
             subtitle: const Text('Rechnungen dieser Person'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showInvoicesPlaceholder(context),
+            onTap: () => _openInvoices(context),
           ),
         ],
       ),
     );
   }
 
-  void _showInvoicesPlaceholder(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Rechnungsimport folgt mit dem Subunternehmer-Workflow.'),
+  void _openInvoices(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ColleagueInvoicesScreen(colleagueId: colleague.id),
       ),
     );
   }

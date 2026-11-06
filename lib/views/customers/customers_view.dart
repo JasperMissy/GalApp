@@ -5,12 +5,16 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:galabau_app/models/client.dart';
+import 'package:galabau_app/models/invoice.dart';
 import 'package:galabau_app/models/order.dart';
 import 'package:galabau_app/models/order_package.dart';
 import 'package:galabau_app/models/order_status.dart';
+import 'package:galabau_app/models/package_manifest.dart';
 import 'package:galabau_app/services/customers/client_repository.dart';
 import 'package:galabau_app/services/id_generator.dart';
+import 'package:galabau_app/services/invoicing/invoice_repository.dart';
 import 'package:galabau_app/services/map/map_marker_builder.dart';
+import 'package:galabau_app/services/storage/invoice_storage_service.dart';
 import 'package:galabau_app/services/orders/order_package_repository.dart';
 import 'package:galabau_app/services/orders/order_repository.dart';
 import 'package:galabau_app/services/packages/order_import_service.dart';
@@ -98,6 +102,10 @@ class CustomersView extends ConsumerWidget {
       await _importFeedback(context, ref, content);
       return;
     }
+    if (content.manifest.type == 'rechnung') {
+      await _importInvoice(context, ref, content);
+      return;
+    }
     if (content.manifest.type != 'auftrag') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Unbekannter Paket-Typ.')),
@@ -173,6 +181,73 @@ class CustomersView extends ConsumerWidget {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Rückmeldung erhalten und zugeordnet.')),
+      );
+    }
+  }
+
+  Future<void> _importInvoice(
+    BuildContext context,
+    WidgetRef ref,
+    PackageContent content,
+  ) async {
+    final String packageId = content.manifest.id;
+    final OrderPackage? pkg = await ref
+        .read(orderPackageRepositoryProvider)
+        .getByPackageId(packageId);
+    if (!context.mounted) return;
+    if (pkg == null || pkg.orderId == null || pkg.colleagueId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kein passender Auftrag/Kollege gefunden.')),
+      );
+      return;
+    }
+
+    final Order? order =
+        await ref.read(orderRepositoryProvider).getById(pkg.orderId!);
+    if (!context.mounted) return;
+    if (order == null || order.clientId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Auftrag nicht gefunden.')),
+      );
+      return;
+    }
+
+    final PackageManifest manifest = content.manifest;
+    final String number = manifest.invoiceNumber ?? manifest.title;
+    final int grossCents = manifest.grossCents ?? 0;
+    final int netCents = manifest.netCents ?? 0;
+    final Invoice invoice = Invoice(
+      id: newId(),
+      number: number,
+      type: 'invoice',
+      clientId: order.clientId!,
+      orderId: order.id,
+      colleagueId: pkg.colleagueId,
+      status: 'issued',
+      issuedDate: manifest.issuedDate ?? DateTime.now(),
+      netCents: netCents,
+      vatRateBp: 1900,
+      vatCents: grossCents - netCents,
+      grossCents: grossCents,
+      createdAt: DateTime.now(),
+    );
+    await ref.read(invoiceRepositoryProvider).insert(invoice);
+
+    final Uint8List? pdfBytes = content.files['rechnung.pdf'];
+    if (pdfBytes != null) {
+      final Directory base = await getApplicationDocumentsDirectory();
+      final InvoiceStorageService storage =
+          InvoiceStorageService(baseDirectory: base);
+      await storage.saveInvoicePdf(
+        orderTitle: order.title,
+        fileName: '$number.pdf',
+        pdfBytes: pdfBytes,
+      );
+    }
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Rechnung empfangen und zugeordnet.')),
       );
     }
   }

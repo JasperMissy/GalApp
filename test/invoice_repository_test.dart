@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:galabau_app/models/invoice.dart' as model;
 import 'package:galabau_app/services/database/app_database.dart';
 import 'package:galabau_app/services/invoicing/invoice_repository.dart';
 
@@ -90,5 +91,35 @@ void main() {
     final invoices = await repo.invoicesByClient('k-1');
     expect(invoices, hasLength(1));
     expect(invoices.single.number, 'RE-2026-0001');
+  });
+
+  test('insert und invoicesByColleague', () async {
+    await db.into(db.clients).insert(ClientsCompanion.insert(
+          id: 'k-1',
+          name: 'Berger',
+          createdAt: DateTime(2026),
+        ));
+
+    await repo.insert(model.Invoice(
+      id: 'r-1',
+      number: 'RE-2026-0001',
+      type: 'invoice',
+      clientId: 'k-1',
+      orderId: 'a-1',
+      colleagueId: 'm-1',
+      status: 'issued',
+      issuedDate: DateTime(2026, 11, 6),
+      netCents: 10000,
+      vatRateBp: 1900,
+      vatCents: 1900,
+      grossCents: 11900,
+      createdAt: DateTime(2026, 11, 6),
+    ));
+
+    final invoices = await repo.invoicesByColleague('m-1');
+    expect(invoices, hasLength(1));
+    expect(invoices.single.number, 'RE-2026-0001');
+    expect(invoices.single.colleagueId, 'm-1');
+    expect(invoices.single.grossCents, 11900);
   });
 }
