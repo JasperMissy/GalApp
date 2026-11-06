@@ -42,6 +42,13 @@ class OrderRepository {
         ),
       );
 
+  Future<model.Order?> getById(String id) async {
+    final row =
+        await (db.select(db.orders)..where((t) => t.id.equals(id)))
+            .getSingleOrNull();
+    return row == null ? null : _toModel(row);
+  }
+
   Future<void> updateStatus(String id, OrderStatus status) =>
       (db.update(db.orders)..where((t) => t.id.equals(id)))
           .write(OrdersCompanion(status: Value(status)));

@@ -2,7 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:galabau_app/services/invoicing/invoice_calculator.dart';
 import 'package:galabau_app/services/invoicing/invoice_service.dart';
+import 'package:galabau_app/services/customers/client_repository.dart';
+import 'package:galabau_app/services/invoicing/invoice_flow_service.dart';
 import 'package:galabau_app/services/invoicing/number_assigner.dart';
+import 'package:galabau_app/services/orders/order_repository.dart';
+import 'package:galabau_app/services/pdf/invoice_pdf_builder.dart';
+import 'package:galabau_app/services/pdf/invoice_pdf_fonts.dart';
+import 'package:galabau_app/services/settings/settings_repository.dart';
+import 'package:galabau_app/services/storage/einnahmen_xlsx_mapper.dart';
+import 'package:galabau_app/services/storage/invoice_storage_service.dart';
+import 'package:path_provider/path_provider.dart';
 
 /// Formular zum Erstellen einer Rechnung aus einem Auftrag.
 class InvoiceFormDialog extends ConsumerStatefulWidget {
@@ -116,13 +125,39 @@ class _InvoiceFormDialogState extends ConsumerState<InvoiceFormDialog> {
     }
 
     setState(() => _saving = true);
-    await ref.read(invoiceServiceProvider).createInvoice(
-          clientId: widget.clientId,
-          orderId: widget.orderId,
-          lines: lines,
-          vatRateBp: 1900,
-          number: _number.text.trim().isEmpty ? null : _number.text.trim(),
+    final client = await ref.read(clientRepositoryProvider).getById(widget.clientId);
+    if (client == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Kunde nicht gefunden.')),
         );
+      }
+      return;
+    }
+    final order = widget.orderId == null
+        ? null
+        : await ref.read(orderRepositoryProvider).getById(widget.orderId!);
+    final settings = await ref.read(settingsRepositoryProvider).loadAll();
+    final fonts = await InvoicePdfFonts.load();
+    final pdfBuilder = InvoicePdfBuilder(
+      regularFont: fonts.regular,
+      boldFont: fonts.bold,
+    );
+    final directory = await getApplicationDocumentsDirectory();
+    final flow = InvoiceFlowService(
+      invoiceService: ref.read(invoiceServiceProvider),
+      storageService: InvoiceStorageService(baseDirectory: directory),
+      xlsxMapper: const EinnahmenXlsxMapper(),
+    );
+    await flow.createAndStore(
+      client: client,
+      orderTitle: order?.title ?? 'Ohne Auftrag',
+      settings: settings,
+      lines: lines,
+      vatRateBp: 1900,
+      buildPdf: (data) => pdfBuilder.build(data),
+      number: _number.text.trim().isEmpty ? null : _number.text.trim(),
+    );
     if (mounted) Navigator.of(context).pop(true);
   }
 

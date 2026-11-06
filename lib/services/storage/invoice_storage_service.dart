@@ -31,4 +31,20 @@ class InvoiceStorageService {
     await file.writeAsBytes(pdfBytes, flush: true);
     return file.path;
   }
+
+  Future<Uint8List?> readEinnahmenXlsx() async {
+    final file = File(p.join(
+        baseDirectory.path, 'Rechnungsverwaltung', 'Einnahmen', 'Einnahmen.xlsx'));
+    if (!await file.exists()) return null;
+    return file.readAsBytes();
+  }
+
+  Future<String> saveEinnahmenXlsx(Uint8List bytes) async {
+    final dir = Directory(p.join(
+        baseDirectory.path, 'Rechnungsverwaltung', 'Einnahmen'));
+    await dir.create(recursive: true);
+    final file = File(p.join(dir.path, 'Einnahmen.xlsx'));
+    await file.writeAsBytes(bytes, flush: true);
+    return file.path;
+  }
 }

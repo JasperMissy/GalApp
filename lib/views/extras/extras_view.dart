@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'invoice_management_view.dart';
 import 'settings_screen.dart';
 
 /// Menüpunkt „Extras“: Rechnungsverwaltung sowie Stammdaten & Design.
@@ -13,10 +14,11 @@ class ExtrasView extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: <Widget>[
-          const _ExtrasEntry(
+          _ExtrasEntry(
             icon: Icons.receipt_long_outlined,
             title: 'Rechnungsverwaltung',
             subtitle: 'Einnahmen und Ausgaben (Material- und Personalkosten)',
+            onTap: () => _openInvoices(context),
           ),
           const SizedBox(height: 12),
           _ExtrasEntry(
@@ -34,6 +36,12 @@ class ExtrasView extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _openInvoices(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const InvoiceManagementView()),
     );
   }
 

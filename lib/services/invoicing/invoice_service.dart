@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/invoice.dart' as model;
+import '../../models/invoice_item.dart' as item;
 import '../database/app_database.dart';
 import '../database/providers.dart';
 import '../id_generator.dart';
@@ -107,6 +108,25 @@ class InvoiceService {
     });
 
     return invoice;
+  }
+
+  Future<List<item.InvoiceItem>> loadItems(String invoiceId) async {
+    final query = (db.select(db.invoiceItems)
+          ..where((t) => t.invoiceId.equals(invoiceId)))
+      ..orderBy([(t) => OrderingTerm.asc(t.position)]);
+    final rows = await query.get();
+    return rows
+        .map((r) => item.InvoiceItem(
+              id: r.id,
+              invoiceId: r.invoiceId,
+              position: r.position,
+              description: r.description,
+              quantityMilli: r.quantityMilli,
+              unit: r.unit,
+              unitPriceCents: r.unitPriceCents,
+              totalCents: r.totalCents,
+            ))
+        .toList();
   }
 }
 
