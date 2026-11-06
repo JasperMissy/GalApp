@@ -114,8 +114,10 @@ class _DetailsTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final AsyncValue<Client?> client =
-        ref.watch(clientByIdProvider(order.clientId));
+    final String? clientId = order.clientId;
+    final AsyncValue<Client?> client = clientId == null
+        ? const AsyncValue.data(null)
+        : ref.watch(clientByIdProvider(clientId));
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -254,10 +256,12 @@ class _InvoicesTab extends ConsumerWidget {
   }
 
   void _generate(BuildContext context, WidgetRef ref) {
+    final String? clientId = order.clientId;
+    if (clientId == null) return;
     showDialog<bool>(
       context: context,
       builder: (_) =>
-          InvoiceFormDialog(clientId: order.clientId, orderId: order.id),
+          InvoiceFormDialog(clientId: clientId, orderId: order.id),
     ).then((bool? created) {
       if (created == true) {
         ref.invalidate(invoicesByOrderProvider(order.id));

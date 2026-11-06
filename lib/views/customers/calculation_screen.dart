@@ -150,10 +150,15 @@ class _CalculationScreenState extends ConsumerState<CalculationScreen> {
       _snack('Menge und Preis müssen Zahlen sein.');
       return;
     }
+    final String? clientId = widget.order.clientId;
+    if (clientId == null) {
+      _snack('Für diesen Auftrag ist kein Kunde hinterlegt.');
+      return;
+    }
     setState(() => _saving = true);
     final saved = await ref.read(invoiceServiceProvider).saveDraft(
           draftId: _draftId,
-          clientId: widget.order.clientId,
+          clientId: clientId,
           orderId: widget.order.id,
           lines: lines,
           vatRateBp: _vatRateBp,
@@ -172,11 +177,16 @@ class _CalculationScreenState extends ConsumerState<CalculationScreen> {
       _snack('Bitte mindestens eine Position angeben.');
       return;
     }
+    final String? clientId = widget.order.clientId;
+    if (clientId == null) {
+      _snack('Für diesen Auftrag ist kein Kunde hinterlegt.');
+      return;
+    }
     setState(() => _saving = true);
     try {
       final client = await ref
           .read(clientRepositoryProvider)
-          .getById(widget.order.clientId);
+          .getById(clientId);
       if (client == null) {
         _snack('Kunde nicht gefunden.');
         return;
@@ -239,8 +249,10 @@ class _CalculationScreenState extends ConsumerState<CalculationScreen> {
   @override
   Widget build(BuildContext context) {
     final InvoiceTotals? totals = _totals();
-    final AsyncValue<Client?> client =
-        ref.watch(clientByIdProvider(widget.order.clientId));
+    final String? clientId = widget.order.clientId;
+    final AsyncValue<Client?> client = clientId == null
+        ? const AsyncValue.data(null)
+        : ref.watch(clientByIdProvider(clientId));
 
     return Scaffold(
       appBar: AppBar(

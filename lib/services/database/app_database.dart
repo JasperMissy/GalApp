@@ -15,6 +15,7 @@ part 'app_database.g.dart';
     Settings,
     InvoiceSequences,
     Orders,
+    OrderPackages,
     Colleagues,
   ],
 )
@@ -33,7 +34,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -48,6 +49,26 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 4) {
             await m.createTable(colleagues);
+          }
+          if (from < 5) {
+            // `orders` neu aufbauen: `clientId` wird nullable, neue Felder.
+            await customStatement(
+              'ALTER TABLE `orders` RENAME TO `orders_old`',
+            );
+            await m.createTable(orders);
+            await customStatement(
+              'INSERT INTO `orders` '
+              '(id, client_id, title, description, created_at, due_date_start, '
+              'due_date_end, status, recurring, notes) '
+              'SELECT id, client_id, title, description, created_at, '
+              'due_date_start, due_date_end, status, recurring, notes '
+              'FROM `orders_old`',
+            );
+            await customStatement('DROP TABLE `orders_old`');
+
+            await m.createTable(orderPackages);
+
+            await m.addColumn(invoices, invoices.colleagueId);
           }
         },
       );

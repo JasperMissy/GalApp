@@ -54,6 +54,7 @@ class InvoiceRepository {
         vatCents: row.vatCents,
         grossCents: row.grossCents,
         createdAt: row.createdAt,
+        colleagueId: row.colleagueId,
       );
 }
 

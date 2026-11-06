@@ -53,6 +53,7 @@ class Invoices extends Table {
   TextColumn get type => text().withDefault(const Constant('invoice'))();
   TextColumn get clientId => text().references(Clients, #id)();
   TextColumn get orderId => text().nullable()();
+  TextColumn get colleagueId => text().nullable()();
   TextColumn get status => text().withDefault(const Constant('draft'))();
   TextColumn get issuedDate =>
       text().map(const IsoDateConverter()).nullable()();
@@ -105,7 +106,7 @@ class InvoiceSequences extends Table {
 @TableIndex(name: 'idx_orders_client', columns: {#clientId})
 class Orders extends Table {
   TextColumn get id => text()();
-  TextColumn get clientId => text().references(Clients, #id)();
+  TextColumn get clientId => text().nullable().references(Clients, #id)();
   TextColumn get title => text()();
   TextColumn get description => text().withDefault(const Constant(''))();
   TextColumn get createdAt => text().map(const IsoDateConverter())();
@@ -117,6 +118,24 @@ class Orders extends Table {
       .withDefault(const Constant('offen'))();
   BoolColumn get recurring => boolean().withDefault(const Constant(false))();
   TextColumn get notes => text().withDefault(const Constant(''))();
+  TextColumn get origin => text().withDefault(const Constant('eigen'))();
+  TextColumn get packageId => text().nullable()();
+  TextColumn get externalAddress => text().nullable()();
+  TextColumn get senderName => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Geteilte/empfangene Auftrags-Pakete (Subunternehmer-Workflow).
+class OrderPackages extends Table {
+  TextColumn get id => text()();
+  TextColumn get orderId => text().nullable()();
+  TextColumn get colleagueId => text().nullable()();
+  TextColumn get direction =>
+      text().withDefault(const Constant('outgoing'))();
+  TextColumn get status => text().withDefault(const Constant('sent'))();
+  TextColumn get createdAt => text().map(const IsoDateConverter())();
 
   @override
   Set<Column> get primaryKey => {id};

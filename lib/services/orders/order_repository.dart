@@ -30,7 +30,7 @@ class OrderRepository {
   Future<void> insert(model.Order order) => db.into(db.orders).insert(
         OrdersCompanion.insert(
           id: order.id,
-          clientId: order.clientId,
+          clientId: Value(order.clientId),
           title: order.title,
           description: Value(order.description),
           createdAt: order.createdAt,
@@ -39,6 +39,10 @@ class OrderRepository {
           status: Value(order.status),
           recurring: Value(order.recurring),
           notes: Value(order.notes),
+          origin: Value(order.origin),
+          packageId: Value(order.packageId),
+          externalAddress: Value(order.externalAddress),
+          senderName: Value(order.senderName),
         ),
       );
 
@@ -61,6 +65,10 @@ class OrderRepository {
             status: Value(order.status),
             recurring: Value(order.recurring),
             notes: Value(order.notes),
+            origin: Value(order.origin),
+            packageId: Value(order.packageId),
+            externalAddress: Value(order.externalAddress),
+            senderName: Value(order.senderName),
           ));
 
   /// Löscht einen Auftrag (Rechnungen/PDFs bleiben bestehen).
@@ -81,6 +89,10 @@ class OrderRepository {
         status: row.status,
         recurring: row.recurring,
         notes: row.notes,
+        origin: row.origin,
+        packageId: row.packageId,
+        externalAddress: row.externalAddress,
+        senderName: row.senderName,
       );
 }
 
