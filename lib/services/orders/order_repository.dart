@@ -49,6 +49,23 @@ class OrderRepository {
     return row == null ? null : _toModel(row);
   }
 
+  /// Aktualisiert einen Auftrag.
+  Future<void> update(model.Order order) =>
+      (db.update(db.orders)..where((t) => t.id.equals(order.id)))
+          .write(OrdersCompanion(
+            clientId: Value(order.clientId),
+            title: Value(order.title),
+            description: Value(order.description),
+            dueDateStart: Value(order.dueDateStart),
+            dueDateEnd: Value(order.dueDateEnd),
+            status: Value(order.status),
+            recurring: Value(order.recurring),
+            notes: Value(order.notes),
+          ));
+
+  /// Löscht einen Auftrag (Rechnungen/PDFs bleiben bestehen).
+  Future<void> delete(String id) =>
+      (db.delete(db.orders)..where((t) => t.id.equals(id))).go();
   Future<void> updateStatus(String id, OrderStatus status) =>
       (db.update(db.orders)..where((t) => t.id.equals(id)))
           .write(OrdersCompanion(status: Value(status)));

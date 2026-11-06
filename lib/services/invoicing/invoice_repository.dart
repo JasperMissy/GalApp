@@ -21,6 +21,14 @@ class InvoiceRepository {
     return rows.map(_toModel).toList();
   }
 
+  /// Rechnungen zu einem Auftrag, neueste zuerst.
+  Future<List<model.Invoice>> invoicesByOrder(String orderId) async {
+    final query = (db.select(db.invoices)
+          ..where((t) => t.orderId.equals(orderId)))
+      ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]);
+    final rows = await query.get();
+    return rows.map(_toModel).toList();
+  }
   model.Invoice _toModel(Invoice row) => model.Invoice(
         id: row.id,
         number: row.number,

@@ -63,4 +63,37 @@ void main() {
     final orders = await repo.watchAll().first;
     expect(orders.single.status, OrderStatus.erledigt);
   });
+
+  test('update ändert Titel, Notizen und wiederkehrend', () async {
+    await seedClient('k-1', 'Berger');
+    await repo.insert(makeOrder());
+    final existing = (await repo.watchAll().first).single;
+
+    await repo.update(model.Order(
+      id: existing.id,
+      clientId: existing.clientId,
+      title: 'Neuer Titel',
+      description: 'Neue Beschreibung',
+      createdAt: existing.createdAt,
+      dueDateStart: existing.dueDateStart,
+      dueDateEnd: existing.dueDateEnd,
+      status: existing.status,
+      recurring: true,
+      notes: 'Neue Notiz',
+    ));
+
+    final reloaded = (await repo.watchAll().first).single;
+    expect(reloaded.title, 'Neuer Titel');
+    expect(reloaded.notes, 'Neue Notiz');
+    expect(reloaded.recurring, isTrue);
+  });
+
+  test('delete entfernt den Auftrag', () async {
+    await seedClient('k-1', 'Berger');
+    await repo.insert(makeOrder());
+    await repo.delete('a-1');
+
+    final orders = await repo.watchAll().first;
+    expect(orders, isEmpty);
+  });
 }
