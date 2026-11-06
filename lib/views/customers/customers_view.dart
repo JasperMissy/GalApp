@@ -64,7 +64,7 @@ class CustomersView extends StatelessWidget {
 
 /// Filter für die Auftragsliste (laut Vision 4.3: Offen, Erledigt,
 /// wiederkehrend).
-enum _OrderFilter { alle, offen, erledigt, wiederkehrend }
+enum _OrderFilter { offen, erledigt, wiederkehrend, alle }
 
 class _ClientList extends ConsumerStatefulWidget {
   const _ClientList();
@@ -171,7 +171,7 @@ class _OrderList extends ConsumerStatefulWidget {
 }
 
 class _OrderListState extends ConsumerState<_OrderList> {
-  _OrderFilter _filter = _OrderFilter.alle;
+  _OrderFilter _filter = _OrderFilter.offen;
 
   @override
   Widget build(BuildContext context) {
