@@ -1,15 +1,30 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:galabau_app/models/client.dart';
+import 'package:galabau_app/models/colleague.dart';
 import 'package:galabau_app/models/invoice.dart';
 import 'package:galabau_app/models/order.dart';
+import 'package:galabau_app/models/order_package.dart' as model;
 import 'package:galabau_app/models/order_status.dart';
+import 'package:galabau_app/models/package_manifest.dart';
+import 'package:galabau_app/services/colleagues/colleague_repository.dart';
 import 'package:galabau_app/services/customers/client_repository.dart';
+import 'package:galabau_app/services/id_generator.dart';
 import 'package:galabau_app/services/invoicing/invoice_repository.dart';
+import 'package:galabau_app/services/orders/order_package_repository.dart';
 import 'package:galabau_app/services/orders/order_repository.dart';
+import 'package:galabau_app/services/packages/order_share_service.dart';
+import 'package:galabau_app/services/packages/package_service.dart';
+import 'package:galabau_app/services/settings/settings_keys.dart';
+import 'package:galabau_app/services/settings/settings_repository.dart';
 import 'package:galabau_app/views/shared/empty_state.dart';
 import 'package:galabau_app/views/shared/error_state.dart';
 import 'package:galabau_app/views/theme/app_colors.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import 'calculation_screen.dart';
 import 'invoice_form_dialog.dart';
@@ -29,6 +44,11 @@ class OrderDetailScreen extends ConsumerWidget {
         appBar: AppBar(
           title: Text(order.title),
           actions: <Widget>[
+            IconButton(
+              icon: const Icon(Icons.ios_share),
+              tooltip: 'Auftrag teilen',
+              onPressed: () => _share(context, ref),
+            ),
             IconButton(
               icon: const Icon(Icons.edit_outlined),
               onPressed: () => _edit(context, ref),
@@ -104,6 +124,102 @@ class OrderDetailScreen extends ConsumerWidget {
       ref.invalidate(ordersProvider);
       if (context.mounted) Navigator.of(context).pop();
     }
+  }
+
+  Future<void> _share(BuildContext context, WidgetRef ref) async {
+    final String? clientId = order.clientId;
+    if (clientId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Nur eigene Aufträge können geteilt werden.'),
+        ),
+      );
+      return;
+    }
+
+    final Colleague? colleague = await showModalBottomSheet<Colleague>(
+      context: context,
+      showDragHandle: true,
+      builder: (_) => const _ColleaguePicker(),
+    );
+    if (colleague == null || !context.mounted) return;
+
+    final Client? client =
+        await ref.read(clientRepositoryProvider).getById(clientId);
+    if (client == null) return;
+
+    final Map<String, String> settings =
+        await ref.read(settingsRepositoryProvider).loadAll();
+    final String senderName = settings[SettingsKeys.firmenname] ?? '';
+
+    final String packageId = newId();
+    final PackageManifest manifest = buildShareManifest(
+      packageId: packageId,
+      order: order,
+      client: client,
+      senderName: senderName,
+    );
+    final Uint8List bytes =
+        const PackageService().createPackage(manifest: manifest);
+
+    await ref.read(orderPackageRepositoryProvider).insert(
+          model.OrderPackage(
+            id: packageId,
+            orderId: order.id,
+            colleagueId: colleague.id,
+            direction: 'outgoing',
+            status: 'sent',
+            createdAt: DateTime.now(),
+          ),
+        );
+
+    final Directory tmp = await getTemporaryDirectory();
+    final File file = File('${tmp.path}/$packageId.galabau');
+    await file.writeAsBytes(bytes, flush: true);
+
+    await SharePlus.instance.share(
+      ShareParams(
+        files: <XFile>[XFile(file.path, mimeType: 'application/zip')],
+        subject: order.title,
+        text: 'Auftrag: ${order.title}',
+      ),
+    );
+  }
+}
+
+class _ColleaguePicker extends ConsumerWidget {
+  const _ColleaguePicker();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final AsyncValue<List<Colleague>> colleagues =
+        ref.watch(colleaguesProvider);
+
+    return colleagues.when(
+      data: (List<Colleague> all) => all.isEmpty
+          ? const EmptyState(
+              icon: Icons.groups_outlined,
+              title: 'Keine Kollegen',
+              message: 'Legen Sie zuerst einen Kollegen an.',
+            )
+          : ListView.builder(
+              itemCount: all.length,
+              itemBuilder: (BuildContext context, int index) {
+                final Colleague colleague = all[index];
+                return ListTile(
+                  leading: const CircleAvatar(child: Icon(Icons.person)),
+                  title: Text(colleague.name),
+                  onTap: () => Navigator.of(context).pop(colleague),
+                );
+              },
+            ),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, _) => const EmptyState(
+        icon: Icons.error_outline,
+        title: 'Fehler',
+        message: 'Kollegen konnten nicht geladen werden.',
+      ),
+    );
   }
 }
 
