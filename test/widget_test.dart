@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:galabau_app/main.dart';
 import 'package:galabau_app/models/client.dart';
+import 'package:galabau_app/services/colleagues/colleague_repository.dart';
 import 'package:galabau_app/services/customers/client_repository.dart';
 import 'package:galabau_app/services/orders/order_repository.dart';
 
@@ -16,6 +17,7 @@ void main() {
         overrides: [
           clientsProvider.overrideWith((ref) => Future.value(clients)),
           ordersProvider.overrideWith((ref) => Future.value(const [])),
+          colleaguesProvider.overrideWith((ref) => Future.value(const [])),
         ],
         child: const GalabauApp(),
       ),
