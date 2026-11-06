@@ -19,7 +19,14 @@ part 'app_database.g.dart';
 )
 class AppDatabase extends _$AppDatabase {
   /// Produktive Datenbank im lokalen Datenverzeichnis der App.
-  AppDatabase() : super(driftDatabase(name: 'galabau'));
+  AppDatabase()
+      : super(driftDatabase(
+          name: 'galabau',
+          web: DriftWebOptions(
+            sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+            driftWorker: Uri.parse('drift_worker.js'),
+          ),
+        ));
 
   /// In-Memory- bzw. Test-Datenbank.
   AppDatabase.forTesting(super.executor);
