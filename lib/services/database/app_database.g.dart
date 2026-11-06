@@ -2900,6 +2900,681 @@ class OrdersCompanion extends UpdateCompanion<Order> {
   }
 }
 
+class $ColleaguesTable extends Colleagues
+    with TableInfo<$ColleaguesTable, Colleague> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ColleaguesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _streetMeta = const VerificationMeta('street');
+  @override
+  late final GeneratedColumn<String> street = GeneratedColumn<String>(
+    'street',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _zipMeta = const VerificationMeta('zip');
+  @override
+  late final GeneratedColumn<String> zip = GeneratedColumn<String>(
+    'zip',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _cityMeta = const VerificationMeta('city');
+  @override
+  late final GeneratedColumn<String> city = GeneratedColumn<String>(
+    'city',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _phoneMeta = const VerificationMeta('phone');
+  @override
+  late final GeneratedColumn<String> phone = GeneratedColumn<String>(
+    'phone',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _emailMeta = const VerificationMeta('email');
+  @override
+  late final GeneratedColumn<String> email = GeneratedColumn<String>(
+    'email',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<List<String>, String>
+  qualifications = GeneratedColumn<String>(
+    'qualifications',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  ).withConverter<List<String>>($ColleaguesTable.$converterqualifications);
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _latMeta = const VerificationMeta('lat');
+  @override
+  late final GeneratedColumn<double> lat = GeneratedColumn<double>(
+    'lat',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lonMeta = const VerificationMeta('lon');
+  @override
+  late final GeneratedColumn<double> lon = GeneratedColumn<double>(
+    'lon',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, String> createdAt =
+      GeneratedColumn<String>(
+        'created_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($ColleaguesTable.$convertercreatedAt);
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    street,
+    zip,
+    city,
+    phone,
+    email,
+    qualifications,
+    notes,
+    lat,
+    lon,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'colleagues';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Colleague> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('street')) {
+      context.handle(
+        _streetMeta,
+        street.isAcceptableOrUnknown(data['street']!, _streetMeta),
+      );
+    }
+    if (data.containsKey('zip')) {
+      context.handle(
+        _zipMeta,
+        zip.isAcceptableOrUnknown(data['zip']!, _zipMeta),
+      );
+    }
+    if (data.containsKey('city')) {
+      context.handle(
+        _cityMeta,
+        city.isAcceptableOrUnknown(data['city']!, _cityMeta),
+      );
+    }
+    if (data.containsKey('phone')) {
+      context.handle(
+        _phoneMeta,
+        phone.isAcceptableOrUnknown(data['phone']!, _phoneMeta),
+      );
+    }
+    if (data.containsKey('email')) {
+      context.handle(
+        _emailMeta,
+        email.isAcceptableOrUnknown(data['email']!, _emailMeta),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('lat')) {
+      context.handle(
+        _latMeta,
+        lat.isAcceptableOrUnknown(data['lat']!, _latMeta),
+      );
+    }
+    if (data.containsKey('lon')) {
+      context.handle(
+        _lonMeta,
+        lon.isAcceptableOrUnknown(data['lon']!, _lonMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Colleague map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Colleague(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      street: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}street'],
+      )!,
+      zip: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}zip'],
+      )!,
+      city: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}city'],
+      )!,
+      phone: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}phone'],
+      )!,
+      email: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}email'],
+      )!,
+      qualifications: $ColleaguesTable.$converterqualifications.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}qualifications'],
+        )!,
+      ),
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      )!,
+      lat: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}lat'],
+      ),
+      lon: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}lon'],
+      ),
+      createdAt: $ColleaguesTable.$convertercreatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}created_at'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $ColleaguesTable createAlias(String alias) {
+    return $ColleaguesTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<List<String>, String> $converterqualifications =
+      const StringListConverter();
+  static TypeConverter<DateTime, String> $convertercreatedAt =
+      const IsoDateConverter();
+}
+
+class Colleague extends DataClass implements Insertable<Colleague> {
+  final String id;
+  final String name;
+  final String street;
+  final String zip;
+  final String city;
+  final String phone;
+  final String email;
+  final List<String> qualifications;
+  final String notes;
+  final double? lat;
+  final double? lon;
+  final DateTime createdAt;
+  const Colleague({
+    required this.id,
+    required this.name,
+    required this.street,
+    required this.zip,
+    required this.city,
+    required this.phone,
+    required this.email,
+    required this.qualifications,
+    required this.notes,
+    this.lat,
+    this.lon,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['street'] = Variable<String>(street);
+    map['zip'] = Variable<String>(zip);
+    map['city'] = Variable<String>(city);
+    map['phone'] = Variable<String>(phone);
+    map['email'] = Variable<String>(email);
+    {
+      map['qualifications'] = Variable<String>(
+        $ColleaguesTable.$converterqualifications.toSql(qualifications),
+      );
+    }
+    map['notes'] = Variable<String>(notes);
+    if (!nullToAbsent || lat != null) {
+      map['lat'] = Variable<double>(lat);
+    }
+    if (!nullToAbsent || lon != null) {
+      map['lon'] = Variable<double>(lon);
+    }
+    {
+      map['created_at'] = Variable<String>(
+        $ColleaguesTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
+    return map;
+  }
+
+  ColleaguesCompanion toCompanion(bool nullToAbsent) {
+    return ColleaguesCompanion(
+      id: Value(id),
+      name: Value(name),
+      street: Value(street),
+      zip: Value(zip),
+      city: Value(city),
+      phone: Value(phone),
+      email: Value(email),
+      qualifications: Value(qualifications),
+      notes: Value(notes),
+      lat: lat == null && nullToAbsent ? const Value.absent() : Value(lat),
+      lon: lon == null && nullToAbsent ? const Value.absent() : Value(lon),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory Colleague.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Colleague(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      street: serializer.fromJson<String>(json['street']),
+      zip: serializer.fromJson<String>(json['zip']),
+      city: serializer.fromJson<String>(json['city']),
+      phone: serializer.fromJson<String>(json['phone']),
+      email: serializer.fromJson<String>(json['email']),
+      qualifications: serializer.fromJson<List<String>>(json['qualifications']),
+      notes: serializer.fromJson<String>(json['notes']),
+      lat: serializer.fromJson<double?>(json['lat']),
+      lon: serializer.fromJson<double?>(json['lon']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'street': serializer.toJson<String>(street),
+      'zip': serializer.toJson<String>(zip),
+      'city': serializer.toJson<String>(city),
+      'phone': serializer.toJson<String>(phone),
+      'email': serializer.toJson<String>(email),
+      'qualifications': serializer.toJson<List<String>>(qualifications),
+      'notes': serializer.toJson<String>(notes),
+      'lat': serializer.toJson<double?>(lat),
+      'lon': serializer.toJson<double?>(lon),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  Colleague copyWith({
+    String? id,
+    String? name,
+    String? street,
+    String? zip,
+    String? city,
+    String? phone,
+    String? email,
+    List<String>? qualifications,
+    String? notes,
+    Value<double?> lat = const Value.absent(),
+    Value<double?> lon = const Value.absent(),
+    DateTime? createdAt,
+  }) => Colleague(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    street: street ?? this.street,
+    zip: zip ?? this.zip,
+    city: city ?? this.city,
+    phone: phone ?? this.phone,
+    email: email ?? this.email,
+    qualifications: qualifications ?? this.qualifications,
+    notes: notes ?? this.notes,
+    lat: lat.present ? lat.value : this.lat,
+    lon: lon.present ? lon.value : this.lon,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  Colleague copyWithCompanion(ColleaguesCompanion data) {
+    return Colleague(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      street: data.street.present ? data.street.value : this.street,
+      zip: data.zip.present ? data.zip.value : this.zip,
+      city: data.city.present ? data.city.value : this.city,
+      phone: data.phone.present ? data.phone.value : this.phone,
+      email: data.email.present ? data.email.value : this.email,
+      qualifications: data.qualifications.present
+          ? data.qualifications.value
+          : this.qualifications,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      lat: data.lat.present ? data.lat.value : this.lat,
+      lon: data.lon.present ? data.lon.value : this.lon,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Colleague(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('street: $street, ')
+          ..write('zip: $zip, ')
+          ..write('city: $city, ')
+          ..write('phone: $phone, ')
+          ..write('email: $email, ')
+          ..write('qualifications: $qualifications, ')
+          ..write('notes: $notes, ')
+          ..write('lat: $lat, ')
+          ..write('lon: $lon, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    name,
+    street,
+    zip,
+    city,
+    phone,
+    email,
+    qualifications,
+    notes,
+    lat,
+    lon,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Colleague &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.street == this.street &&
+          other.zip == this.zip &&
+          other.city == this.city &&
+          other.phone == this.phone &&
+          other.email == this.email &&
+          other.qualifications == this.qualifications &&
+          other.notes == this.notes &&
+          other.lat == this.lat &&
+          other.lon == this.lon &&
+          other.createdAt == this.createdAt);
+}
+
+class ColleaguesCompanion extends UpdateCompanion<Colleague> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<String> street;
+  final Value<String> zip;
+  final Value<String> city;
+  final Value<String> phone;
+  final Value<String> email;
+  final Value<List<String>> qualifications;
+  final Value<String> notes;
+  final Value<double?> lat;
+  final Value<double?> lon;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const ColleaguesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.street = const Value.absent(),
+    this.zip = const Value.absent(),
+    this.city = const Value.absent(),
+    this.phone = const Value.absent(),
+    this.email = const Value.absent(),
+    this.qualifications = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.lat = const Value.absent(),
+    this.lon = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ColleaguesCompanion.insert({
+    required String id,
+    required String name,
+    this.street = const Value.absent(),
+    this.zip = const Value.absent(),
+    this.city = const Value.absent(),
+    this.phone = const Value.absent(),
+    this.email = const Value.absent(),
+    this.qualifications = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.lat = const Value.absent(),
+    this.lon = const Value.absent(),
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       name = Value(name),
+       createdAt = Value(createdAt);
+  static Insertable<Colleague> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<String>? street,
+    Expression<String>? zip,
+    Expression<String>? city,
+    Expression<String>? phone,
+    Expression<String>? email,
+    Expression<String>? qualifications,
+    Expression<String>? notes,
+    Expression<double>? lat,
+    Expression<double>? lon,
+    Expression<String>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (street != null) 'street': street,
+      if (zip != null) 'zip': zip,
+      if (city != null) 'city': city,
+      if (phone != null) 'phone': phone,
+      if (email != null) 'email': email,
+      if (qualifications != null) 'qualifications': qualifications,
+      if (notes != null) 'notes': notes,
+      if (lat != null) 'lat': lat,
+      if (lon != null) 'lon': lon,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ColleaguesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? name,
+    Value<String>? street,
+    Value<String>? zip,
+    Value<String>? city,
+    Value<String>? phone,
+    Value<String>? email,
+    Value<List<String>>? qualifications,
+    Value<String>? notes,
+    Value<double?>? lat,
+    Value<double?>? lon,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return ColleaguesCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      street: street ?? this.street,
+      zip: zip ?? this.zip,
+      city: city ?? this.city,
+      phone: phone ?? this.phone,
+      email: email ?? this.email,
+      qualifications: qualifications ?? this.qualifications,
+      notes: notes ?? this.notes,
+      lat: lat ?? this.lat,
+      lon: lon ?? this.lon,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (street.present) {
+      map['street'] = Variable<String>(street.value);
+    }
+    if (zip.present) {
+      map['zip'] = Variable<String>(zip.value);
+    }
+    if (city.present) {
+      map['city'] = Variable<String>(city.value);
+    }
+    if (phone.present) {
+      map['phone'] = Variable<String>(phone.value);
+    }
+    if (email.present) {
+      map['email'] = Variable<String>(email.value);
+    }
+    if (qualifications.present) {
+      map['qualifications'] = Variable<String>(
+        $ColleaguesTable.$converterqualifications.toSql(qualifications.value),
+      );
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (lat.present) {
+      map['lat'] = Variable<double>(lat.value);
+    }
+    if (lon.present) {
+      map['lon'] = Variable<double>(lon.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(
+        $ColleaguesTable.$convertercreatedAt.toSql(createdAt.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ColleaguesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('street: $street, ')
+          ..write('zip: $zip, ')
+          ..write('city: $city, ')
+          ..write('phone: $phone, ')
+          ..write('email: $email, ')
+          ..write('qualifications: $qualifications, ')
+          ..write('notes: $notes, ')
+          ..write('lat: $lat, ')
+          ..write('lon: $lon, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2911,6 +3586,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this,
   );
   late final $OrdersTable orders = $OrdersTable(this);
+  late final $ColleaguesTable colleagues = $ColleaguesTable(this);
   late final Index idxInvoicesClient = Index(
     'idx_invoices_client',
     'CREATE INDEX idx_invoices_client ON invoices (client_id)',
@@ -2934,6 +3610,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     settings,
     invoiceSequences,
     orders,
+    colleagues,
     idxInvoicesClient,
     idxInvoicesOrder,
     idxOrdersClient,
@@ -5090,6 +5767,348 @@ typedef $$OrdersTableProcessedTableManager =
       Order,
       PrefetchHooks Function({bool clientId})
     >;
+typedef $$ColleaguesTableCreateCompanionBuilder = ColleaguesCompanion Function({
+  required String id,
+  required String name,
+  Value<String> street,
+  Value<String> zip,
+  Value<String> city,
+  Value<String> phone,
+  Value<String> email,
+  Value<List<String>> qualifications,
+  Value<String> notes,
+  Value<double?> lat,
+  Value<double?> lon,
+  required DateTime createdAt,
+  Value<int> rowid,
+});
+typedef $$ColleaguesTableUpdateCompanionBuilder = ColleaguesCompanion Function({
+  Value<String> id,
+  Value<String> name,
+  Value<String> street,
+  Value<String> zip,
+  Value<String> city,
+  Value<String> phone,
+  Value<String> email,
+  Value<List<String>> qualifications,
+  Value<String> notes,
+  Value<double?> lat,
+  Value<double?> lon,
+  Value<DateTime> createdAt,
+  Value<int> rowid,
+});
+
+class $$ColleaguesTableFilterComposer
+    extends Composer<_$AppDatabase, $ColleaguesTable> {
+  $$ColleaguesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get street => $composableBuilder(
+    column: $table.street,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get zip => $composableBuilder(
+    column: $table.zip,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get city => $composableBuilder(
+    column: $table.city,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get phone => $composableBuilder(
+    column: $table.phone,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get email => $composableBuilder(
+    column: $table.email,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<List<String>, List<String>, String>
+  get qualifications => $composableBuilder(
+    column: $table.qualifications,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get lat => $composableBuilder(
+    column: $table.lat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get lon => $composableBuilder(
+    column: $table.lon,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, String> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+}
+
+class $$ColleaguesTableOrderingComposer
+    extends Composer<_$AppDatabase, $ColleaguesTable> {
+  $$ColleaguesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get street => $composableBuilder(
+    column: $table.street,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get zip => $composableBuilder(
+    column: $table.zip,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get city => $composableBuilder(
+    column: $table.city,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get phone => $composableBuilder(
+    column: $table.phone,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get email => $composableBuilder(
+    column: $table.email,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get qualifications => $composableBuilder(
+    column: $table.qualifications,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get lat => $composableBuilder(
+    column: $table.lat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get lon => $composableBuilder(
+    column: $table.lon,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ColleaguesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ColleaguesTable> {
+  $$ColleaguesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get street =>
+      $composableBuilder(column: $table.street, builder: (column) => column);
+
+  GeneratedColumn<String> get zip =>
+      $composableBuilder(column: $table.zip, builder: (column) => column);
+
+  GeneratedColumn<String> get city =>
+      $composableBuilder(column: $table.city, builder: (column) => column);
+
+  GeneratedColumn<String> get phone =>
+      $composableBuilder(column: $table.phone, builder: (column) => column);
+
+  GeneratedColumn<String> get email =>
+      $composableBuilder(column: $table.email, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<List<String>, String> get qualifications =>
+      $composableBuilder(
+        column: $table.qualifications,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<double> get lat =>
+      $composableBuilder(column: $table.lat, builder: (column) => column);
+
+  GeneratedColumn<double> get lon =>
+      $composableBuilder(column: $table.lon, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$ColleaguesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ColleaguesTable,
+          Colleague,
+          $$ColleaguesTableFilterComposer,
+          $$ColleaguesTableOrderingComposer,
+          $$ColleaguesTableAnnotationComposer,
+          $$ColleaguesTableCreateCompanionBuilder,
+          $$ColleaguesTableUpdateCompanionBuilder,
+          (
+            Colleague,
+            BaseReferences<_$AppDatabase, $ColleaguesTable, Colleague>,
+          ),
+          Colleague,
+          PrefetchHooks Function()
+        > {
+  $$ColleaguesTableTableManager(_$AppDatabase db, $ColleaguesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ColleaguesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ColleaguesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ColleaguesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> street = const Value.absent(),
+                Value<String> zip = const Value.absent(),
+                Value<String> city = const Value.absent(),
+                Value<String> phone = const Value.absent(),
+                Value<String> email = const Value.absent(),
+                Value<List<String>> qualifications = const Value.absent(),
+                Value<String> notes = const Value.absent(),
+                Value<double?> lat = const Value.absent(),
+                Value<double?> lon = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ColleaguesCompanion(
+                id: id,
+                name: name,
+                street: street,
+                zip: zip,
+                city: city,
+                phone: phone,
+                email: email,
+                qualifications: qualifications,
+                notes: notes,
+                lat: lat,
+                lon: lon,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String name,
+                Value<String> street = const Value.absent(),
+                Value<String> zip = const Value.absent(),
+                Value<String> city = const Value.absent(),
+                Value<String> phone = const Value.absent(),
+                Value<String> email = const Value.absent(),
+                Value<List<String>> qualifications = const Value.absent(),
+                Value<String> notes = const Value.absent(),
+                Value<double?> lat = const Value.absent(),
+                Value<double?> lon = const Value.absent(),
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => ColleaguesCompanion.insert(
+                id: id,
+                name: name,
+                street: street,
+                zip: zip,
+                city: city,
+                phone: phone,
+                email: email,
+                qualifications: qualifications,
+                notes: notes,
+                lat: lat,
+                lon: lon,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$ColleaguesTable, Colleague>(table),
+                  BaseReferences<_$AppDatabase, $ColleaguesTable, Colleague>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ColleaguesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ColleaguesTable,
+      Colleague,
+      $$ColleaguesTableFilterComposer,
+      $$ColleaguesTableOrderingComposer,
+      $$ColleaguesTableAnnotationComposer,
+      $$ColleaguesTableCreateCompanionBuilder,
+      $$ColleaguesTableUpdateCompanionBuilder,
+      (Colleague, BaseReferences<_$AppDatabase, $ColleaguesTable, Colleague>),
+      Colleague,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -5106,4 +6125,6 @@ class $AppDatabaseManager {
       $$InvoiceSequencesTableTableManager(_db, _db.invoiceSequences);
   $$OrdersTableTableManager get orders =>
       $$OrdersTableTableManager(_db, _db.orders);
+  $$ColleaguesTableTableManager get colleagues =>
+      $$ColleaguesTableTableManager(_db, _db.colleagues);
 }

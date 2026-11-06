@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 
 import '../../models/order_status.dart';
@@ -11,6 +13,18 @@ class IsoDateConverter extends TypeConverter<DateTime, String> {
 
   @override
   String toSql(DateTime value) => value.toIso8601String();
+}
+
+/// JSON-Text-Konverter für String-Listen (z. B. Qualifikationen).
+class StringListConverter extends TypeConverter<List<String>, String> {
+  const StringListConverter();
+
+  @override
+  List<String> fromSql(String fromDb) =>
+      (jsonDecode(fromDb) as List<dynamic>).cast<String>();
+
+  @override
+  String toSql(List<String> value) => jsonEncode(value);
 }
 
 /// Kunden (Quelle: Kundenverwaltung der App).
@@ -103,6 +117,26 @@ class Orders extends Table {
       .withDefault(const Constant('offen'))();
   BoolColumn get recurring => boolean().withDefault(const Constant(false))();
   TextColumn get notes => text().withDefault(const Constant(''))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Kollegen (Subunternehmer/Mitarbeiter).
+class Colleagues extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+  TextColumn get street => text().withDefault(const Constant(''))();
+  TextColumn get zip => text().withDefault(const Constant(''))();
+  TextColumn get city => text().withDefault(const Constant(''))();
+  TextColumn get phone => text().withDefault(const Constant(''))();
+  TextColumn get email => text().withDefault(const Constant(''))();
+  TextColumn get qualifications =>
+      text().map(const StringListConverter()).withDefault(const Constant('[]'))();
+  TextColumn get notes => text().withDefault(const Constant(''))();
+  RealColumn get lat => real().nullable()();
+  RealColumn get lon => real().nullable()();
+  TextColumn get createdAt => text().map(const IsoDateConverter())();
 
   @override
   Set<Column> get primaryKey => {id};

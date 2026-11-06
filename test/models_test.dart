@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:galabau_app/models/client.dart';
+import 'package:galabau_app/models/colleague.dart';
 import 'package:galabau_app/models/invoice.dart';
 import 'package:galabau_app/models/invoice_item.dart';
 import 'package:galabau_app/models/invoice_sequence.dart';
@@ -102,5 +103,40 @@ void main() {
     final restored = Setting.fromJson(setting.toJson());
     expect(restored.key, 'akzentfarbe');
     expect(restored.value, '#4CAF50');
+  });
+
+  test('Colleague: fromJson/toJson Roundtrip inkl. Qualifikationen', () {
+    final colleague = Colleague(
+      id: 'm-1',
+      name: 'Max Mustermann',
+      street: 'Beispielweg 1',
+      zip: '34123',
+      city: 'Kassel',
+      phone: '0561 123',
+      email: 'max@example.de',
+      qualifications: const ['SKT-A', 'Anhängerführerschein'],
+      notes: 'Zuverlässig',
+      createdAt: DateTime(2026, 11, 5, 10, 30),
+      lat: 51.3127,
+      lon: 9.4797,
+    );
+
+    final restored = Colleague.fromJson(colleague.toJson());
+    expect(restored.id, colleague.id);
+    expect(restored.name, colleague.name);
+    expect(restored.qualifications, colleague.qualifications);
+    expect(restored.notes, 'Zuverlässig');
+    expect(restored.lat, 51.3127);
+    expect(restored.lon, 9.4797);
+
+    final ohneAdresse = Colleague.fromJson(const {
+      'id': 'm-2',
+      'name': 'Ohne',
+      'created_at': '2026-11-05T10:30:00.000',
+    });
+    expect(ohneAdresse.street, '');
+    expect(ohneAdresse.qualifications, isEmpty);
+    expect(ohneAdresse.notes, '');
+    expect(ohneAdresse.lat, isNull);
   });
 }

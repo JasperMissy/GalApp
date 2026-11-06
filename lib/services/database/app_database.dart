@@ -15,6 +15,7 @@ part 'app_database.g.dart';
     Settings,
     InvoiceSequences,
     Orders,
+    Colleagues,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -32,7 +33,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -44,6 +45,9 @@ class AppDatabase extends _$AppDatabase {
           if (from < 3) {
             await m.addColumn(clients, clients.lat);
             await m.addColumn(clients, clients.lon);
+          }
+          if (from < 4) {
+            await m.createTable(colleagues);
           }
         },
       );
