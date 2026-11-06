@@ -74,7 +74,7 @@ class OrderDetailScreen extends ConsumerWidget {
           children: <Widget>[
             CalculationScreen(order: order),
             _DetailsTab(order: order),
-            WorkDocumentationTab(orderId: order.id),
+            WorkDocumentationTab(orderId: order.id, orderTitle: order.title),
             const EmptyState(
               icon: Icons.attach_file_outlined,
               title: 'Assoziierte Rechnungen',
