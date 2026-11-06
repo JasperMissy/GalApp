@@ -4,11 +4,13 @@ import 'package:galabau_app/models/client.dart';
 import 'package:galabau_app/models/order.dart';
 import 'package:galabau_app/models/order_status.dart';
 import 'package:galabau_app/services/customers/client_repository.dart';
+import 'package:galabau_app/services/map/map_marker_builder.dart';
 import 'package:galabau_app/services/orders/order_repository.dart';
 import 'package:galabau_app/views/customers/client_detail_sheet.dart';
 import 'package:galabau_app/views/customers/client_form_dialog.dart';
 import 'package:galabau_app/views/customers/order_detail_screen.dart';
 import 'package:galabau_app/views/customers/order_form_dialog.dart';
+import 'package:galabau_app/views/map/map_screen.dart';
 import 'package:galabau_app/views/shared/empty_state.dart';
 import 'package:galabau_app/views/shared/error_state.dart';
 import 'package:galabau_app/views/theme/app_colors.dart';
@@ -24,12 +26,36 @@ class CustomersView extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Kunden'),
+          actions: <Widget>[
+            Builder(
+              builder: (BuildContext context) {
+                final int tabIndex = DefaultTabController.of(context).index;
+                return IconButton(
+                  icon: const Icon(Icons.map_outlined),
+                  tooltip: 'Karte',
+                  onPressed: () => _openMap(context, tabIndex),
+                );
+              },
+            ),
+          ],
           bottom: const TabBar(
             tabs: <Widget>[Tab(text: 'Kunden'), Tab(text: 'Aufträge')],
           ),
         ),
         body: const TabBarView(
           children: <Widget>[_ClientList(), _OrderList()],
+        ),
+      ),
+    );
+  }
+
+  void _openMap(BuildContext context, int tabIndex) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => MapScreen(
+          initialFilter: tabIndex == 1
+              ? MapFilter.offeneAuftraege
+              : MapFilter.kunden,
         ),
       ),
     );
