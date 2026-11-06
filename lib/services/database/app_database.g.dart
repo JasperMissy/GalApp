@@ -76,6 +76,24 @@ class $ClientsTable extends Clients with TableInfo<$ClientsTable, Client> {
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
+  static const VerificationMeta _latMeta = const VerificationMeta('lat');
+  @override
+  late final GeneratedColumn<double> lat = GeneratedColumn<double>(
+    'lat',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lonMeta = const VerificationMeta('lon');
+  @override
+  late final GeneratedColumn<double> lon = GeneratedColumn<double>(
+    'lon',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
   @override
   late final GeneratedColumnWithTypeConverter<DateTime, String> createdAt =
       GeneratedColumn<String>(
@@ -94,6 +112,8 @@ class $ClientsTable extends Clients with TableInfo<$ClientsTable, Client> {
     city,
     phone,
     email,
+    lat,
+    lon,
     createdAt,
   ];
   @override
@@ -151,6 +171,18 @@ class $ClientsTable extends Clients with TableInfo<$ClientsTable, Client> {
         email.isAcceptableOrUnknown(data['email']!, _emailMeta),
       );
     }
+    if (data.containsKey('lat')) {
+      context.handle(
+        _latMeta,
+        lat.isAcceptableOrUnknown(data['lat']!, _latMeta),
+      );
+    }
+    if (data.containsKey('lon')) {
+      context.handle(
+        _lonMeta,
+        lon.isAcceptableOrUnknown(data['lon']!, _lonMeta),
+      );
+    }
     return context;
   }
 
@@ -188,6 +220,14 @@ class $ClientsTable extends Clients with TableInfo<$ClientsTable, Client> {
         DriftSqlType.string,
         data['${effectivePrefix}email'],
       )!,
+      lat: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}lat'],
+      ),
+      lon: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}lon'],
+      ),
       createdAt: $ClientsTable.$convertercreatedAt.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.string,
@@ -214,6 +254,8 @@ class Client extends DataClass implements Insertable<Client> {
   final String city;
   final String phone;
   final String email;
+  final double? lat;
+  final double? lon;
   final DateTime createdAt;
   const Client({
     required this.id,
@@ -223,6 +265,8 @@ class Client extends DataClass implements Insertable<Client> {
     required this.city,
     required this.phone,
     required this.email,
+    this.lat,
+    this.lon,
     required this.createdAt,
   });
   @override
@@ -235,6 +279,12 @@ class Client extends DataClass implements Insertable<Client> {
     map['city'] = Variable<String>(city);
     map['phone'] = Variable<String>(phone);
     map['email'] = Variable<String>(email);
+    if (!nullToAbsent || lat != null) {
+      map['lat'] = Variable<double>(lat);
+    }
+    if (!nullToAbsent || lon != null) {
+      map['lon'] = Variable<double>(lon);
+    }
     {
       map['created_at'] = Variable<String>(
         $ClientsTable.$convertercreatedAt.toSql(createdAt),
@@ -252,6 +302,8 @@ class Client extends DataClass implements Insertable<Client> {
       city: Value(city),
       phone: Value(phone),
       email: Value(email),
+      lat: lat == null && nullToAbsent ? const Value.absent() : Value(lat),
+      lon: lon == null && nullToAbsent ? const Value.absent() : Value(lon),
       createdAt: Value(createdAt),
     );
   }
@@ -269,6 +321,8 @@ class Client extends DataClass implements Insertable<Client> {
       city: serializer.fromJson<String>(json['city']),
       phone: serializer.fromJson<String>(json['phone']),
       email: serializer.fromJson<String>(json['email']),
+      lat: serializer.fromJson<double?>(json['lat']),
+      lon: serializer.fromJson<double?>(json['lon']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -283,6 +337,8 @@ class Client extends DataClass implements Insertable<Client> {
       'city': serializer.toJson<String>(city),
       'phone': serializer.toJson<String>(phone),
       'email': serializer.toJson<String>(email),
+      'lat': serializer.toJson<double?>(lat),
+      'lon': serializer.toJson<double?>(lon),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -295,6 +351,8 @@ class Client extends DataClass implements Insertable<Client> {
     String? city,
     String? phone,
     String? email,
+    Value<double?> lat = const Value.absent(),
+    Value<double?> lon = const Value.absent(),
     DateTime? createdAt,
   }) => Client(
     id: id ?? this.id,
@@ -304,6 +362,8 @@ class Client extends DataClass implements Insertable<Client> {
     city: city ?? this.city,
     phone: phone ?? this.phone,
     email: email ?? this.email,
+    lat: lat.present ? lat.value : this.lat,
+    lon: lon.present ? lon.value : this.lon,
     createdAt: createdAt ?? this.createdAt,
   );
   Client copyWithCompanion(ClientsCompanion data) {
@@ -315,6 +375,8 @@ class Client extends DataClass implements Insertable<Client> {
       city: data.city.present ? data.city.value : this.city,
       phone: data.phone.present ? data.phone.value : this.phone,
       email: data.email.present ? data.email.value : this.email,
+      lat: data.lat.present ? data.lat.value : this.lat,
+      lon: data.lon.present ? data.lon.value : this.lon,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -329,14 +391,26 @@ class Client extends DataClass implements Insertable<Client> {
           ..write('city: $city, ')
           ..write('phone: $phone, ')
           ..write('email: $email, ')
+          ..write('lat: $lat, ')
+          ..write('lon: $lon, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, street, zip, city, phone, email, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    street,
+    zip,
+    city,
+    phone,
+    email,
+    lat,
+    lon,
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -348,6 +422,8 @@ class Client extends DataClass implements Insertable<Client> {
           other.city == this.city &&
           other.phone == this.phone &&
           other.email == this.email &&
+          other.lat == this.lat &&
+          other.lon == this.lon &&
           other.createdAt == this.createdAt);
 }
 
@@ -359,6 +435,8 @@ class ClientsCompanion extends UpdateCompanion<Client> {
   final Value<String> city;
   final Value<String> phone;
   final Value<String> email;
+  final Value<double?> lat;
+  final Value<double?> lon;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
   const ClientsCompanion({
@@ -369,6 +447,8 @@ class ClientsCompanion extends UpdateCompanion<Client> {
     this.city = const Value.absent(),
     this.phone = const Value.absent(),
     this.email = const Value.absent(),
+    this.lat = const Value.absent(),
+    this.lon = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -380,6 +460,8 @@ class ClientsCompanion extends UpdateCompanion<Client> {
     this.city = const Value.absent(),
     this.phone = const Value.absent(),
     this.email = const Value.absent(),
+    this.lat = const Value.absent(),
+    this.lon = const Value.absent(),
     required DateTime createdAt,
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -393,6 +475,8 @@ class ClientsCompanion extends UpdateCompanion<Client> {
     Expression<String>? city,
     Expression<String>? phone,
     Expression<String>? email,
+    Expression<double>? lat,
+    Expression<double>? lon,
     Expression<String>? createdAt,
     Expression<int>? rowid,
   }) {
@@ -404,6 +488,8 @@ class ClientsCompanion extends UpdateCompanion<Client> {
       if (city != null) 'city': city,
       if (phone != null) 'phone': phone,
       if (email != null) 'email': email,
+      if (lat != null) 'lat': lat,
+      if (lon != null) 'lon': lon,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -417,6 +503,8 @@ class ClientsCompanion extends UpdateCompanion<Client> {
     Value<String>? city,
     Value<String>? phone,
     Value<String>? email,
+    Value<double?>? lat,
+    Value<double?>? lon,
     Value<DateTime>? createdAt,
     Value<int>? rowid,
   }) {
@@ -428,6 +516,8 @@ class ClientsCompanion extends UpdateCompanion<Client> {
       city: city ?? this.city,
       phone: phone ?? this.phone,
       email: email ?? this.email,
+      lat: lat ?? this.lat,
+      lon: lon ?? this.lon,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
     );
@@ -457,6 +547,12 @@ class ClientsCompanion extends UpdateCompanion<Client> {
     if (email.present) {
       map['email'] = Variable<String>(email.value);
     }
+    if (lat.present) {
+      map['lat'] = Variable<double>(lat.value);
+    }
+    if (lon.present) {
+      map['lon'] = Variable<double>(lon.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<String>(
         $ClientsTable.$convertercreatedAt.toSql(createdAt.value),
@@ -478,6 +574,8 @@ class ClientsCompanion extends UpdateCompanion<Client> {
           ..write('city: $city, ')
           ..write('phone: $phone, ')
           ..write('email: $email, ')
+          ..write('lat: $lat, ')
+          ..write('lon: $lon, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -2860,6 +2958,8 @@ typedef $$ClientsTableCreateCompanionBuilder = ClientsCompanion Function({
   Value<String> city,
   Value<String> phone,
   Value<String> email,
+  Value<double?> lat,
+  Value<double?> lon,
   required DateTime createdAt,
   Value<int> rowid,
 });
@@ -2871,6 +2971,8 @@ typedef $$ClientsTableUpdateCompanionBuilder = ClientsCompanion Function({
   Value<String> city,
   Value<String> phone,
   Value<String> email,
+  Value<double?> lat,
+  Value<double?> lon,
   Value<DateTime> createdAt,
   Value<int> rowid,
 });
@@ -2959,6 +3061,16 @@ class $$ClientsTableFilterComposer
 
   ColumnFilters<String> get email => $composableBuilder(
     column: $table.email,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get lat => $composableBuilder(
+    column: $table.lat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get lon => $composableBuilder(
+    column: $table.lon,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3063,6 +3175,16 @@ class $$ClientsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get lat => $composableBuilder(
+    column: $table.lat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get lon => $composableBuilder(
+    column: $table.lon,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -3098,6 +3220,12 @@ class $$ClientsTableAnnotationComposer
 
   GeneratedColumn<String> get email =>
       $composableBuilder(column: $table.email, builder: (column) => column);
+
+  GeneratedColumn<double> get lat =>
+      $composableBuilder(column: $table.lat, builder: (column) => column);
+
+  GeneratedColumn<double> get lon =>
+      $composableBuilder(column: $table.lon, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<DateTime, String> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -3188,6 +3316,8 @@ class $$ClientsTableTableManager
                 Value<String> city = const Value.absent(),
                 Value<String> phone = const Value.absent(),
                 Value<String> email = const Value.absent(),
+                Value<double?> lat = const Value.absent(),
+                Value<double?> lon = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ClientsCompanion(
@@ -3198,6 +3328,8 @@ class $$ClientsTableTableManager
                 city: city,
                 phone: phone,
                 email: email,
+                lat: lat,
+                lon: lon,
                 createdAt: createdAt,
                 rowid: rowid,
               ),
@@ -3210,6 +3342,8 @@ class $$ClientsTableTableManager
                 Value<String> city = const Value.absent(),
                 Value<String> phone = const Value.absent(),
                 Value<String> email = const Value.absent(),
+                Value<double?> lat = const Value.absent(),
+                Value<double?> lon = const Value.absent(),
                 required DateTime createdAt,
                 Value<int> rowid = const Value.absent(),
               }) => ClientsCompanion.insert(
@@ -3220,6 +3354,8 @@ class $$ClientsTableTableManager
                 city: city,
                 phone: phone,
                 email: email,
+                lat: lat,
+                lon: lon,
                 createdAt: createdAt,
                 rowid: rowid,
               ),

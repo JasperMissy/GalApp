@@ -9,6 +9,8 @@ class Client {
     required this.phone,
     required this.email,
     required this.createdAt,
+    this.lat,
+    this.lon,
   });
 
   factory Client.fromJson(Map<String, dynamic> json) => Client(
@@ -20,6 +22,8 @@ class Client {
         phone: json['phone'] as String? ?? '',
         email: json['email'] as String? ?? '',
         createdAt: DateTime.parse(json['created_at'] as String),
+        lat: (json['lat'] as num?)?.toDouble(),
+        lon: (json['lon'] as num?)?.toDouble(),
       );
 
   final String id;
@@ -30,6 +34,8 @@ class Client {
   final String phone;
   final String email;
   final DateTime createdAt;
+  final double? lat;
+  final double? lon;
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -40,5 +46,7 @@ class Client {
         'phone': phone,
         'email': email,
         'created_at': createdAt.toIso8601String(),
+        'lat': lat,
+        'lon': lon,
       };
 }

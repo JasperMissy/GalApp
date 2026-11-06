@@ -22,6 +22,8 @@ class Clients extends Table {
   TextColumn get city => text().withDefault(const Constant(''))();
   TextColumn get phone => text().withDefault(const Constant(''))();
   TextColumn get email => text().withDefault(const Constant(''))();
+  RealColumn get lat => real().nullable()();
+  RealColumn get lon => real().nullable()();
   TextColumn get createdAt => text().map(const IsoDateConverter())();
 
   @override
