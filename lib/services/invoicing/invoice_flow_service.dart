@@ -27,6 +27,7 @@ class InvoiceFlowService {
     required Map<String, String> settings,
     required List<InvoiceLineInput> lines,
     required int vatRateBp,
+    String type = 'invoice',
     required Future<Uint8List> Function(InvoicePdfData data) buildPdf,
     String? number,
     DateTime? issuedDate,
@@ -35,6 +36,7 @@ class InvoiceFlowService {
       clientId: client.id,
       lines: lines,
       vatRateBp: vatRateBp,
+      type: type,
       number: number,
       issuedDate: issuedDate,
     );
@@ -53,7 +55,9 @@ class InvoiceFlowService {
       pdfBytes: bytes,
     );
 
-    await _appendEinnahmen(invoice, client, orderTitle);
+    if (type == 'invoice') {
+      await _appendEinnahmen(invoice, client, orderTitle);
+    }
     return invoice;
   }
 

@@ -78,4 +78,57 @@ void main() {
       throwsA(isA<SqliteException>()),
     );
   });
+
+  test('saveDraft legt einen Draft an und aktualisiert ihn', () async {
+    await seedClient();
+    final draft = await service.saveDraft(
+      clientId: 'k-1',
+      orderId: 'a-1',
+      lines: const <InvoiceLineInput>[
+        InvoiceLineInput(position: 1, description: 'Baumfällung', quantityMilli: 8000, unit: 'Std.', unitPriceCents: 7500),
+      ],
+      vatRateBp: 1900,
+    );
+    expect(draft.status, 'draft');
+    expect(draft.number, isNull);
+    expect(draft.grossCents, 71400);
+
+    final updated = await service.saveDraft(
+      draftId: draft.id,
+      clientId: 'k-1',
+      orderId: 'a-1',
+      lines: const <InvoiceLineInput>[
+        InvoiceLineInput(position: 1, description: 'Baumfällung', quantityMilli: 8000, unit: 'Std.', unitPriceCents: 7500),
+        InvoiceLineInput(position: 2, description: 'Abtransport', quantityMilli: 1500, unit: 'Pauschale', unitPriceCents: 18000),
+      ],
+      vatRateBp: 1900,
+    );
+    expect(updated.id, draft.id);
+    final items = await service.loadItems(draft.id);
+    expect(items, hasLength(2));
+  });
+
+  test('draftByOrder findet den offenen Draft', () async {
+    await seedClient();
+    await service.saveDraft(
+        clientId: 'k-1', orderId: 'a-1', lines: const [], vatRateBp: 1900);
+
+    final found = await service.draftByOrder('a-1');
+    expect(found, isNotNull);
+    expect(found!.orderId, 'a-1');
+    expect(await service.draftByOrder('a-999'), isNull);
+  });
+
+  test('createInvoice mit type offer vergibt eine AN-Nummer', () async {
+    await seedClient();
+    final offer = await service.createInvoice(
+      clientId: 'k-1',
+      lines: const <InvoiceLineInput>[],
+      vatRateBp: 1900,
+      type: 'offer',
+      issuedDate: DateTime(2026),
+    );
+    expect(offer.type, 'offer');
+    expect(offer.number, 'AN-2026-0001');
+  });
 }

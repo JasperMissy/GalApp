@@ -39,12 +39,15 @@ class InvoiceService {
     String? orderId,
     required List<InvoiceLineInput> lines,
     required int vatRateBp,
+    String type = 'invoice',
     String? number,
     DateTime? issuedDate,
   }) async {
     final DateTime date = issuedDate ?? DateTime.now();
-    final String finalNumber = number ??
-        await assigner.assignNumber(InvoiceDocumentType.invoice, date: date);
+    final InvoiceDocumentType documentType =
+        type == 'offer' ? InvoiceDocumentType.offer : InvoiceDocumentType.invoice;
+    final String finalNumber =
+        number ?? await assigner.assignNumber(documentType, date: date);
 
     final List<int> lineTotals = <int>[
       for (final InvoiceLineInput line in lines)
@@ -61,7 +64,7 @@ class InvoiceService {
     final model.Invoice invoice = model.Invoice(
       id: newId(),
       number: finalNumber,
-      type: 'invoice',
+      type: type,
       clientId: clientId,
       orderId: orderId,
       status: 'issued',
@@ -109,6 +112,115 @@ class InvoiceService {
 
     return invoice;
   }
+
+  /// Speichert einen Kalkulations-Draft (status `draft`, keine Nummer).
+  /// [draftId] == null legt einen neuen Draft an, sonst wird aktualisiert.
+  Future<model.Invoice> saveDraft({
+    String? draftId,
+    required String clientId,
+    String? orderId,
+    required List<InvoiceLineInput> lines,
+    required int vatRateBp,
+  }) async {
+    final List<int> lineTotals = <int>[
+      for (final InvoiceLineInput line in lines)
+        InvoiceCalculator.lineTotalCents(
+          quantityMilli: line.quantityMilli,
+          unitPriceCents: line.unitPriceCents,
+        ),
+    ];
+    final InvoiceTotals totals = InvoiceCalculator.totals(
+      lineTotalsCents: lineTotals,
+      vatRateBp: vatRateBp,
+    );
+
+    final String id = draftId ?? newId();
+    if (draftId == null) {
+      final DateTime now = DateTime.now();
+      await db.transaction(() async {
+        await db.into(db.invoices).insert(
+              InvoicesCompanion.insert(
+                id: id,
+                clientId: clientId,
+                orderId: Value(orderId),
+                netCents: Value(totals.netCents),
+                vatRateBp: Value(vatRateBp),
+                vatCents: Value(totals.vatCents),
+                grossCents: Value(totals.grossCents),
+                createdAt: now,
+              ),
+            );
+        await _insertItems(id, lines, lineTotals);
+      });
+    } else {
+      await db.transaction(() async {
+        await (db.delete(db.invoiceItems)..where((t) => t.invoiceId.equals(id)))
+            .go();
+        await (db.update(db.invoices)..where((t) => t.id.equals(id)))
+            .write(InvoicesCompanion(
+              clientId: Value(clientId),
+              orderId: Value(orderId),
+              netCents: Value(totals.netCents),
+              vatRateBp: Value(vatRateBp),
+              vatCents: Value(totals.vatCents),
+              grossCents: Value(totals.grossCents),
+            ));
+        await _insertItems(id, lines, lineTotals);
+      });
+    }
+
+    final row = await (db.select(db.invoices)..where((t) => t.id.equals(id)))
+        .getSingle();
+    return _toModel(row);
+  }
+
+  /// Der offene Kalkulations-Draft eines Auftrags (oder null).
+  Future<model.Invoice?> draftByOrder(String orderId) async {
+    final row = await (db.select(db.invoices)
+          ..where((t) =>
+              t.orderId.equals(orderId) &
+              t.status.equals('draft') &
+              t.type.equals('invoice')))
+        .getSingleOrNull();
+    return row == null ? null : _toModel(row);
+  }
+
+  Future<void> _insertItems(
+    String invoiceId,
+    List<InvoiceLineInput> lines,
+    List<int> lineTotals,
+  ) async {
+    for (int i = 0; i < lines.length; i++) {
+      final InvoiceLineInput line = lines[i];
+      await db.into(db.invoiceItems).insert(
+            InvoiceItemsCompanion.insert(
+              id: newId(),
+              invoiceId: invoiceId,
+              position: line.position,
+              description: line.description,
+              quantityMilli: line.quantityMilli,
+              unit: Value(line.unit),
+              unitPriceCents: line.unitPriceCents,
+              totalCents: lineTotals[i],
+            ),
+          );
+    }
+  }
+
+  model.Invoice _toModel(Invoice row) => model.Invoice(
+        id: row.id,
+        number: row.number,
+        type: row.type,
+        clientId: row.clientId,
+        orderId: row.orderId,
+        status: row.status,
+        issuedDate: row.issuedDate,
+        netCents: row.netCents,
+        vatRateBp: row.vatRateBp,
+        vatCents: row.vatCents,
+        grossCents: row.grossCents,
+        createdAt: row.createdAt,
+      );
 
   Future<List<item.InvoiceItem>> loadItems(String invoiceId) async {
     final query = (db.select(db.invoiceItems)
