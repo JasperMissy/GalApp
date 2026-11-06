@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:galabau_app/models/client.dart';
+import 'package:galabau_app/services/contacts/contact_import.dart';
 import 'package:galabau_app/services/customers/client_repository.dart';
 import 'package:galabau_app/services/id_generator.dart';
 
@@ -52,6 +53,19 @@ class _ClientFormDialogState extends ConsumerState<ClientFormDialog> {
     if (mounted) Navigator.of(context).pop(true);
   }
 
+  Future<void> _importContact() async {
+    final ImportedContact? contact = await pickContact(context);
+    if (contact == null) return;
+    setState(() {
+      _name.text = contact.name;
+      _phone.text = contact.phone;
+      _email.text = contact.email;
+      _street.text = contact.street;
+      _zip.text = contact.zip;
+      _city.text = contact.city;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -62,6 +76,12 @@ class _ClientFormDialogState extends ConsumerState<ClientFormDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
+              OutlinedButton.icon(
+                onPressed: _importContact,
+                icon: const Icon(Icons.contacts_outlined),
+                label: const Text('Aus Kontakten importieren'),
+              ),
+              const SizedBox(height: 8),
               TextFormField(
                 controller: _name,
                 decoration: const InputDecoration(labelText: 'Name *'),

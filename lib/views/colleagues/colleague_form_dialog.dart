@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:galabau_app/models/colleague.dart';
 import 'package:galabau_app/services/colleagues/colleague_repository.dart';
+import 'package:galabau_app/services/contacts/contact_import.dart';
 import 'package:galabau_app/services/id_generator.dart';
 
 /// Vorauswahl an Qualifikationen (Vision, Abschnitt 3.4).
@@ -68,6 +69,19 @@ class _ColleagueFormDialogState extends ConsumerState<ColleagueFormDialog> {
     if (mounted) Navigator.of(context).pop(true);
   }
 
+  Future<void> _importContact() async {
+    final ImportedContact? contact = await pickContact(context);
+    if (contact == null) return;
+    setState(() {
+      _name.text = contact.name;
+      _phone.text = contact.phone;
+      _email.text = contact.email;
+      _street.text = contact.street;
+      _zip.text = contact.zip;
+      _city.text = contact.city;
+    });
+  }
+
   void _addCustomQualification() {
     final String value = _customQualification.text.trim();
     if (value.isEmpty) return;
@@ -93,6 +107,12 @@ class _ColleagueFormDialogState extends ConsumerState<ColleagueFormDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
+              OutlinedButton.icon(
+                onPressed: _importContact,
+                icon: const Icon(Icons.contacts_outlined),
+                label: const Text('Aus Kontakten importieren'),
+              ),
+              const SizedBox(height: 8),
               TextFormField(
                 controller: _name,
                 decoration: const InputDecoration(labelText: 'Name *'),
