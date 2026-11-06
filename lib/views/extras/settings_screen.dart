@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:galabau_app/services/settings/settings_keys.dart';
 import 'package:galabau_app/services/settings/settings_repository.dart';
+import 'package:galabau_app/views/shared/error_state.dart';
 
 /// Stammdaten & Rechnungs-Design (Firmendaten, Steuer, IBAN, Akzentfarbe).
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -69,7 +70,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           return _form();
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (Object error, StackTrace _) => Center(child: Text('Fehler: $error')),
+        error: (_, _) => ErrorState(onRetry: () => ref.invalidate(settingsProvider)),
       ),
     );
   }

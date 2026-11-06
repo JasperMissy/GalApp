@@ -10,6 +10,7 @@ import 'package:galabau_app/views/customers/client_form_dialog.dart';
 import 'package:galabau_app/views/customers/order_detail_screen.dart';
 import 'package:galabau_app/views/customers/order_form_dialog.dart';
 import 'package:galabau_app/views/shared/empty_state.dart';
+import 'package:galabau_app/views/shared/error_state.dart';
 import 'package:galabau_app/views/theme/app_colors.dart';
 
 /// Bereich „Kunden“ mit den beiden Ansichten „Kunden“ und „Aufträge“.
@@ -110,7 +111,7 @@ class _ClientListState extends ConsumerState<_ClientList> {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (Object error, StackTrace _) => Center(child: Text('Fehler: $error')),
+        error: (_, _) => ErrorState(onRetry: () => ref.invalidate(clientsProvider)),
       ),
     );
   }
@@ -211,7 +212,7 @@ class _OrderListState extends ConsumerState<_OrderList> {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (Object error, StackTrace _) => Center(child: Text('Fehler: $error')),
+        error: (_, _) => ErrorState(onRetry: () => ref.invalidate(ordersProvider)),
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:galabau_app/models/invoice.dart';
 import 'package:galabau_app/services/invoicing/invoice_repository.dart';
 import 'package:galabau_app/views/shared/empty_state.dart';
+import 'package:galabau_app/views/shared/error_state.dart';
 
 /// Rechnungsverwaltung: Liste der gestellten Einnahmen-Rechnungen.
 class InvoiceManagementView extends ConsumerWidget {
@@ -42,7 +43,7 @@ class InvoiceManagementView extends ConsumerWidget {
                 },
               ),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (Object error, StackTrace _) => Center(child: Text('Fehler: $error')),
+        error: (_, _) => ErrorState(onRetry: () => ref.invalidate(issuedInvoicesProvider)),
       ),
     );
   }
