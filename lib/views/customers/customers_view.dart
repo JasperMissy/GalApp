@@ -1,11 +1,18 @@
+import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:galabau_app/models/client.dart';
 import 'package:galabau_app/models/order.dart';
 import 'package:galabau_app/models/order_status.dart';
 import 'package:galabau_app/services/customers/client_repository.dart';
+import 'package:galabau_app/services/id_generator.dart';
 import 'package:galabau_app/services/map/map_marker_builder.dart';
+import 'package:galabau_app/services/orders/order_package_repository.dart';
 import 'package:galabau_app/services/orders/order_repository.dart';
+import 'package:galabau_app/services/packages/order_import_service.dart';
+import 'package:galabau_app/services/packages/package_service.dart';
 import 'package:galabau_app/views/customers/client_detail_sheet.dart';
 import 'package:galabau_app/views/customers/client_form_dialog.dart';
 import 'package:galabau_app/views/customers/order_detail_screen.dart';
@@ -16,17 +23,22 @@ import 'package:galabau_app/views/shared/error_state.dart';
 import 'package:galabau_app/views/theme/app_colors.dart';
 
 /// Bereich „Kunden“ mit den beiden Ansichten „Kunden“ und „Aufträge“.
-class CustomersView extends StatelessWidget {
+class CustomersView extends ConsumerWidget {
   const CustomersView({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Kunden'),
           actions: <Widget>[
+            IconButton(
+              icon: const Icon(Icons.unarchive_outlined),
+              tooltip: 'Paket importieren',
+              onPressed: () => _importPackage(context, ref),
+            ),
             Builder(
               builder: (BuildContext context) {
                 final int tabIndex = DefaultTabController.of(context).index;
@@ -60,11 +72,59 @@ class CustomersView extends StatelessWidget {
       ),
     );
   }
+
+  Future<void> _importPackage(BuildContext context, WidgetRef ref) async {
+    final List<PlatformFile> files = await FilePicker.pickFiles(
+      type: FileType.any,
+      allowedExtensions: const <String>['galabau', 'zip'],
+    );
+    if (files.isEmpty || !context.mounted) return;
+
+    final Uint8List bytes = await files.single.readAsBytes();
+    if (!context.mounted) return;
+
+    final PackageContent? content = const PackageService().readPackage(bytes);
+    if (content == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ungültiges Paket.')),
+      );
+      return;
+    }
+    if (content.manifest.type != 'auftrag') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kein Auftrags-Paket.')),
+      );
+      return;
+    }
+
+    final String orderId = newId();
+    final Order order = buildImportedOrder(
+      orderId: orderId,
+      manifest: content.manifest,
+    );
+    await ref.read(orderRepositoryProvider).insert(order);
+    await ref.read(orderPackageRepositoryProvider).insert(
+          buildImportedPackage(
+            packageId: content.manifest.id,
+            orderId: orderId,
+          ),
+        );
+    ref.invalidate(ordersProvider);
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Auftrag importiert (externe Aufträge).')),
+      );
+    }
+  }
 }
 
 /// Filter für die Auftragsliste (laut Vision 4.3: Offen, Erledigt,
 /// wiederkehrend).
 enum _OrderFilter { offen, erledigt, wiederkehrend, alle }
+
+/// Herkunft eines Auftrags (Filter: eigene vs. externe Aufträge).
+enum _OrderOriginFilter { meine, externe, alle }
 
 class _ClientList extends ConsumerStatefulWidget {
   const _ClientList();
@@ -172,6 +232,7 @@ class _OrderList extends ConsumerStatefulWidget {
 
 class _OrderListState extends ConsumerState<_OrderList> {
   _OrderFilter _filter = _OrderFilter.offen;
+  _OrderOriginFilter _origin = _OrderOriginFilter.meine;
 
   @override
   Widget build(BuildContext context) {
@@ -185,20 +246,40 @@ class _OrderListState extends ConsumerState<_OrderList> {
       ),
       body: orders.when(
         data: (List<Order> all) {
-          final List<Order> filtered = all.where(_matchesFilter).toList();
+          final List<Order> filtered = all
+              .where((Order o) => _matchesFilter(o) && _matchesOrigin(o))
+              .toList();
           return Column(
             children: <Widget>[
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: Wrap(
-                  spacing: 8,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    for (final _OrderFilter f in _OrderFilter.values)
-                      ChoiceChip(
-                        label: Text(_filterLabel(f)),
-                        selected: _filter == f,
-                        onSelected: (_) => setState(() => _filter = f),
-                      ),
+                    Wrap(
+                      spacing: 8,
+                      children: <Widget>[
+                        for (final _OrderOriginFilter o
+                            in _OrderOriginFilter.values)
+                          ChoiceChip(
+                            label: Text(_originLabel(o)),
+                            selected: _origin == o,
+                            onSelected: (_) => setState(() => _origin = o),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Wrap(
+                      spacing: 8,
+                      children: <Widget>[
+                        for (final _OrderFilter f in _OrderFilter.values)
+                          ChoiceChip(
+                            label: Text(_filterLabel(f)),
+                            selected: _filter == f,
+                            onSelected: (_) => setState(() => _filter = f),
+                          ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -258,6 +339,22 @@ class _OrderListState extends ConsumerState<_OrderList> {
       _OrderFilter.offen => 'Offen',
       _OrderFilter.erledigt => 'Erledigt',
       _OrderFilter.wiederkehrend => 'Wiederkehrend',
+    };
+  }
+
+  bool _matchesOrigin(Order order) {
+    return switch (_origin) {
+      _OrderOriginFilter.meine => order.origin == 'eigen',
+      _OrderOriginFilter.externe => order.origin == 'erhalten',
+      _OrderOriginFilter.alle => true,
+    };
+  }
+
+  String _originLabel(_OrderOriginFilter origin) {
+    return switch (origin) {
+      _OrderOriginFilter.meine => 'Meine Aufträge',
+      _OrderOriginFilter.externe => 'Externe Aufträge',
+      _OrderOriginFilter.alle => 'Beide',
     };
   }
 
