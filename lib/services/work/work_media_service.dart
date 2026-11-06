@@ -35,4 +35,20 @@ class WorkMediaService {
     await file.writeAsBytes(bytes, flush: true);
     return file.path;
   }
+
+  /// Liest alle Medien eines Auftrags (relativer Pfad → Bytes).
+  Future<Map<String, Uint8List>> loadMedia(String orderTitle) async {
+    final Directory dir = Directory(
+      p.join(baseDirectory.path, 'Aufträge', orderTitle, 'Arbeitsdokumentation'),
+    );
+    if (!await dir.exists()) return <String, Uint8List>{};
+    final Map<String, Uint8List> result = <String, Uint8List>{};
+    await for (final FileSystemEntity entity in dir.list(recursive: true)) {
+      if (entity is File) {
+        final String relPath = p.relative(entity.path, from: dir.path);
+        result[relPath] = await entity.readAsBytes();
+      }
+    }
+    return result;
+  }
 }

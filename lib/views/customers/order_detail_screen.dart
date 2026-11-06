@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -10,14 +11,19 @@ import 'package:galabau_app/models/order.dart';
 import 'package:galabau_app/models/order_package.dart' as model;
 import 'package:galabau_app/models/order_status.dart';
 import 'package:galabau_app/models/package_manifest.dart';
+import 'package:galabau_app/models/work_note.dart';
+import 'package:galabau_app/models/work_time_entry.dart';
 import 'package:galabau_app/services/colleagues/colleague_repository.dart';
 import 'package:galabau_app/services/customers/client_repository.dart';
 import 'package:galabau_app/services/id_generator.dart';
 import 'package:galabau_app/services/invoicing/invoice_repository.dart';
 import 'package:galabau_app/services/orders/order_package_repository.dart';
 import 'package:galabau_app/services/orders/order_repository.dart';
+import 'package:galabau_app/services/orders/work_documentation_repository.dart';
+import 'package:galabau_app/services/packages/order_feedback_service.dart';
 import 'package:galabau_app/services/packages/order_share_service.dart';
 import 'package:galabau_app/services/packages/package_service.dart';
+import 'package:galabau_app/services/work/work_media_service.dart';
 import 'package:galabau_app/services/settings/settings_keys.dart';
 import 'package:galabau_app/services/settings/settings_repository.dart';
 import 'package:galabau_app/views/shared/empty_state.dart';
@@ -45,6 +51,12 @@ class OrderDetailScreen extends ConsumerWidget {
         appBar: AppBar(
           title: Text(order.title),
           actions: <Widget>[
+            if (order.origin == 'erhalten')
+              IconButton(
+                icon: const Icon(Icons.send),
+                tooltip: 'Rückmeldung senden',
+                onPressed: () => _sendFeedback(context, ref),
+              ),
             IconButton(
               icon: const Icon(Icons.ios_share),
               tooltip: 'Auftrag teilen',
@@ -179,6 +191,51 @@ class OrderDetailScreen extends ConsumerWidget {
         files: <XFile>[XFile(file.path, mimeType: 'application/zip')],
         subject: order.title,
         text: 'Auftrag: ${order.title}',
+      ),
+    );
+  }
+
+  Future<void> _sendFeedback(BuildContext context, WidgetRef ref) async {
+    final String? packageId = order.packageId;
+    if (packageId == null) return;
+
+    final repo = ref.read(workDocumentationRepositoryProvider);
+    final List<WorkTimeEntry> times = await repo.watchTimes(order.id).first;
+    final WorkNote? note = await repo.loadNote(order.id);
+
+    final Map<String, String> settings =
+        await ref.read(settingsRepositoryProvider).loadAll();
+    final String senderName = settings[SettingsKeys.firmenname] ?? '';
+
+    final PackageManifest manifest = buildFeedbackManifest(
+      packageId: packageId,
+      title: order.title,
+      senderName: senderName,
+    );
+    final String docJson = buildWorkDocumentationJson(
+      times: times,
+      note: note?.text ?? '',
+    );
+
+    final Directory base = await getApplicationDocumentsDirectory();
+    final WorkMediaService mediaService = WorkMediaService(baseDirectory: base);
+    final Map<String, Uint8List> files =
+        await mediaService.loadMedia(order.title);
+    files['arbeitsdokumentation.json'] =
+        Uint8List.fromList(utf8.encode(docJson));
+
+    final Uint8List bytes =
+        const PackageService().createPackage(manifest: manifest, files: files);
+
+    final Directory tmp = await getTemporaryDirectory();
+    final File file = File('${tmp.path}/$packageId.galabau');
+    await file.writeAsBytes(bytes, flush: true);
+
+    await SharePlus.instance.share(
+      ShareParams(
+        files: <XFile>[XFile(file.path, mimeType: 'application/zip')],
+        subject: order.title,
+        text: 'Rückmeldung: ${order.title}',
       ),
     );
   }

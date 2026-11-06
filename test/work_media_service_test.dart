@@ -47,4 +47,26 @@ void main() {
     expect(File(path).existsSync(), isTrue);
     expect(path, contains('sprachmemos'));
   });
+
+  test('loadMedia liest gespeicherte Medien', () async {
+    await service.saveMedia(
+      orderTitle: 'Laubentfernung',
+      subfolder: 'fotos',
+      fileName: '1.jpg',
+      bytes: Uint8List.fromList(<int>[1, 2, 3]),
+    );
+    await service.saveMedia(
+      orderTitle: 'Laubentfernung',
+      subfolder: 'sprachmemos',
+      fileName: 'memo.m4a',
+      bytes: Uint8List.fromList(<int>[4, 5, 6]),
+    );
+
+    final Map<String, Uint8List> media =
+        await service.loadMedia('Laubentfernung');
+
+    expect(media, hasLength(2));
+    expect(media.keys.any((String k) => k.contains('1.jpg')), isTrue);
+    expect(media.keys.any((String k) => k.contains('memo.m4a')), isTrue);
+  });
 }
