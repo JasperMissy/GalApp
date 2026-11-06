@@ -200,7 +200,32 @@ Beim Speichern wird der **Auftragsordner automatisch erstellt**.
 
 > **Hinweis zur Absender-Erkennung:** Die Zuordnung beruht auf der **Paket-ID**, nicht auf der Identität des Messenger-Absenders. Die App hat keinen Zugriff auf Messenger-Daten. Wird ein Paket weitergeleitet, würde es trotzdem dem Kontakt X zugeordnet. Der mitgesendete Name des Subunternehmers dient als Plausibilitätsprüfung (siehe Abschnitt 9).
 
-> **Wichtig:** Die Zeiterfassung dient ausschließlich der **Dokumentation** im Auftragsordner. Sie wird **nicht** automatisch in die Personalkosten übernommen. Rechnungen von Subunternehmern kommen separat, üblicherweise per E-Mail, und werden vom Hauptunternehmer importiert (siehe Abschnitte 6.2.2 und 6.5).
+> **Wichtig:** Die Zeiterfassung dient ausschließlich der **Dokumentation** im Auftragsordner. Sie wird **nicht** automatisch in die Personalkosten übernommen.
+
+### 5.1 Auftrags-Kategorien (Filter im Reiter „Aufträge")
+
+In der App des Subunternehmers gibt es zwei Kategorien:
+- **Meine Aufträge** – selbst erstellte/akquirierte Aufträge (eigene Kunden).
+- **Externe Aufträge** – per `.galabau`-Paket von einem Auftraggeber erhaltene Aufträge.
+
+Externe Aufträge speichern sich beim Import **automatisch** ein und sind über den Filter sichtbar. Sie tragen zusätzlich die **Paket-ID** und den **Absender** (Name des Auftraggebers); einen eigenen Kunden brauchen sie nicht (die Adresse kommt aus dem Paket).
+
+### 5.2 Rückweg und Rechnung (über die App)
+
+Der Subunternehmer sendet nach Feierabend die **Arbeitsdokumentation** als Rück-Paket zurück (Schritt 5/6 oben). Die **Rechnung folgt später** – ebenfalls über die App:
+
+1. Der Subunternehmer erstellt für den externen Auftrag eine **Rechnung** (eigene Stammdaten, gleiche PDF-Engine) **oder importiert** eine vorhandene Rechnungs-PDF.
+2. **„Rechnung senden"** erzeugt ein Rück-Paket mit: **Paket-ID** + **Rechnungs-PDF** + **strukturierten Metadaten** (Nummer, Datum, Netto/Brutto, Name des Subunternehmers).
+3. Der Auftraggeber importiert das Paket; anhand der **Paket-ID** wird die Rechnung **automatisch dem Auftrag und dem Kontakt zugeordnet** und in `Personalkosten.xlsx` verbucht.
+
+> **Zwei gleichwertige Kanäle:** (a) **App-Rückweg** (Paket-ID, automatische Zuordnung) für Subunternehmer mit App; (b) **Mail + PDF-Import** (manuelle Zuordnung, Abschnitt 6.5) für alle anderen. Beide landen am selben Ort: Auftragsordner `Rechnungen/` (mit Auftragsbezug) bzw. `Personalkosten/` (ohne Auftrag), plus Verweis bei *Kollegen → Person → Rechnungen*.
+
+### 5.3 Datenmodell & Paket-Format (Erweiterung)
+
+- `Order` + `origin` (`eigen`/`erhalten`), `packageId`, `externalAddress`, `senderName`; `clientId` wird für externe Aufträge optional.
+- Neue Tabelle `OrderPackages` (Paket-ID ↔ Auftrag ↔ Kollege, Richtung, Status).
+- `Invoice` + `colleagueId` (Subunternehmer, von dem eine Rechnung stammt) → Querverweis *Kollegen → Rechnungen*.
+- Paket-Format `.galabau` (ZIP): `manifest.json` (Paket-ID, Typ `auftrag`/`rückmeldung`/`rechnung`, Titel, Adresse, Beschreibung, Absender) + `fotos/`, `videos/`, `sprachmemos/` + optional `rechnung.pdf`.
 
 ---
 
@@ -280,6 +305,31 @@ Der Import einer Rechnung (PDF) wird an **mehreren Stellen** angeboten. Die Rech
 | Kollegen → Person → **Rechnungen** | Import einer Rechnung dieser Person (z. B. eines Subunternehmers) | Person ist bereits zugeordnet, Auftrag optional; Tabelle: `Personalkosten.xlsx` |
 
 > Der Import unter *Kollegen → Person* ist vom Auftraggeber bestätigt. Die Zuordnung zu einem Auftrag wird angeboten, ist aber nicht verpflichtend (siehe Abschnitt 6.4).
+
+### 6.6 Steuer-Konzept (Buchhaltung & Steuererklärung)
+
+**Ziel:** Buchhaltung führen und **steuererklärungsfertig** aufbereiten, inklusive der üblichen Steueroptimierungen – ohne doppelte Erfassung („einmal erfassen, mehrfach nutzen").
+
+**Grundprinzipien:**
+- **Konfigurierbare Umsatzsteuer:** Einstellung „**Kleinunternehmer (§19 UStG) ja/nein**" (jederzeit änderbar). Ja → Rechnungen ohne USt, kein Vorsteuerabzug. Nein (Regelbesteuerung) → 19 %/7 % USt, **Vorsteuerabzug**, Umsatzsteuer-Voranmeldung.
+- **Volle Editierbarkeit:** alle erfassten Daten (Buchungszeilen, Belege, Fahrten, Anlagegüter, Zeiterfassung) sind nachträglich **änderbar und löschbar** (Fehler ausbügeln).
+
+**Architektur:** Buchhaltung in **SQLite als editierbare Buchungszeilen (CRUD)**; die `.xlsx` (Einnahmen/Material/Personal) werden beim Export daraus **neu erzeugt** (statt append-only) und bleiben so konsistent.
+
+**Steuerbausteine:**
+| Baustein | Inhalt |
+|---|---|
+| Umsatzsteuer | §19 Kleinunternehmer oder Regelbesteuerung; USt + Vorsteuer |
+| Einnahmen | eigene Rechnungen |
+| Betriebsausgaben | Material, Fremdleistungen, Werkzeug, Maschinen, Fahrzeug, Kraftstoff, Versicherung, Telefon/Internet, Arbeitskleidung, Fortbildung … |
+| Fahrtkosten | 0,30 €/km (privater Pkw) oder 1-%-Regelung/Fahrtenbuch (betrieblicher Pkw) |
+| Verpflegungsmehraufwand | ab 8 h Abwesenheit 14 €, ab 24 h 28 € (Inland) |
+| AfA / GWG | Anlagegüter > 800 € netto abschreiben, GWG ≤ 800 € sofort absetzen |
+| Häusl. Arbeitszimmer / sonstige | optional (Mittelpunkt der Tätigkeit), Arbeitsmittel, Fortbildung, doppelte Haushaltsführung |
+
+**Datenmodell:** Buchungszeile (Datum, Betrag, MwSt-Satz, Steuerkategorie, Beleg, Zuordnung), Steuerkategorien-Katalog (konfigurierbar), Fahrtenbuch, Anlagegüter, Zeiterfassung.
+
+**Automatismen & Auswertungen:** Fahrt → km × 0,30 €; Abwesenheit → Pauschale; Anlagegut → AfA/GWG; Rechnung/Beleg → MwSt-korrekt. Auswertungen: **EÜR** (Anlage-EÜR-fertig), **USt-Voranmeldung** (nur Regelbesteuerung), MwSt-/Vorsteuer-Übersicht, Fahrtkosten-, Verpflegungs-, AfA-Übersicht.
 
 ---
 
@@ -395,8 +445,8 @@ Vom Auftraggeber festgelegt:
 
 ## 12. Projektstand
 
-- Flutter-Projekt `galabau_app` mit Grundgerüst: Material 3, helles Theme (Grün/Braun, Inter), untere Navigation mit den 5 Punkten und Gerüst-Screens
-- Struktur nach `.clinerules`: bisher nur `lib/views/` (Theme, Navigationsrahmen, Gerüst-Screens). `lib/models/` und `lib/services/` entstehen mit den ersten Datenmodellen und der lokalen Speicherung.
-- Noch keine Fachlogik und keine lokale Speicherung.
-- Geprüft: `flutter analyze` ohne Befunde, 3 Widget-Tests bestanden, Web-Build erfolgreich (Inter wird eingebunden). Ein Windows-Build ist auf diesem Rechner nicht möglich, weil Visual Studio mit der C++-Desktop-Workload fehlt.
-- Referenz-Screen *Kunden* folgt als Nächstes.
+- Flutter-Projekt `galabau_app`: Material 3, helles Theme (Grün/Braun, Inter), untere Navigation mit den 5 Punkten (Kunden · Kalender · Home · Kollegen · Extras).
+- Umsetzung mit **Riverpod** + **drift** (SQLite) nach `.clinerules` (`lib/models/`, `lib/views/`, `lib/services/`).
+- **Umgesetzt:** Kunden & Aufträge (Liste, Suche, Filter, Formulare, Details, Rechnungsordner als Querverweis) · Kalkulation & Rechnung/Angebot (PDF-Engine, Nummernvergabe `RE-`/`AN-`) · **Kollegen-Datenbank** (Liste, Formular mit Qualifikationen, Details) · **Karte** (Open-Street-Map online mit Filtern Kunden/offene Aufträge/Kollegen, Geokodierung der Adressen) · **Kontakt-Import** aus dem Adressbuch (Kunden + Kollegen).
+- **Offen:** Subunternehmer-Workflow („Auftrag teilen" + App-Rückweg, Abschnitt 5) · Steuer-Konzept (Abschnitt 6.6) · Kalender · Home (Begrüßung, Wetter, Tagesaufgaben) · Rechnungsverwaltung (`.xlsx` Ausgaben/Material/Personal).
+- Geprüft: `flutter analyze` ohne Befunde, `flutter test` grün (67 Tests).
