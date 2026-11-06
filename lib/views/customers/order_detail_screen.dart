@@ -33,6 +33,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'calculation_screen.dart';
+import 'invoice_feedback_dialog.dart';
 import 'invoice_form_dialog.dart';
 import 'order_form_dialog.dart';
 import 'work_documentation_tab.dart';
@@ -56,6 +57,12 @@ class OrderDetailScreen extends ConsumerWidget {
                 icon: const Icon(Icons.send),
                 tooltip: 'Rückmeldung senden',
                 onPressed: () => _sendFeedback(context, ref),
+              ),
+            if (order.origin == 'erhalten')
+              IconButton(
+                icon: const Icon(Icons.receipt_long),
+                tooltip: 'Rechnung senden',
+                onPressed: () => _sendInvoice(context, ref),
               ),
             IconButton(
               icon: const Icon(Icons.ios_share),
@@ -236,6 +243,45 @@ class OrderDetailScreen extends ConsumerWidget {
         files: <XFile>[XFile(file.path, mimeType: 'application/zip')],
         subject: order.title,
         text: 'Rückmeldung: ${order.title}',
+      ),
+    );
+  }
+
+  Future<void> _sendInvoice(BuildContext context, WidgetRef ref) async {
+    final String? packageId = order.packageId;
+    if (packageId == null) return;
+
+    final InvoiceFeedbackData? data = await showDialog<InvoiceFeedbackData>(
+      context: context,
+      builder: (_) => const InvoiceFeedbackDialog(),
+    );
+    if (data == null || !context.mounted) return;
+
+    final Map<String, String> settings =
+        await ref.read(settingsRepositoryProvider).loadAll();
+    final String senderName = settings[SettingsKeys.firmenname] ?? '';
+
+    final PackageManifest manifest = buildInvoiceManifest(
+      packageId: packageId,
+      data: data,
+      senderName: senderName,
+    );
+    final Map<String, Uint8List> files = <String, Uint8List>{};
+    if (data.pdfBytes != null) {
+      files['rechnung.pdf'] = data.pdfBytes!;
+    }
+    final Uint8List bytes =
+        const PackageService().createPackage(manifest: manifest, files: files);
+
+    final Directory tmp = await getTemporaryDirectory();
+    final File file = File('${tmp.path}/$packageId-rechnung.galabau');
+    await file.writeAsBytes(bytes, flush: true);
+
+    await SharePlus.instance.share(
+      ShareParams(
+        files: <XFile>[XFile(file.path, mimeType: 'application/zip')],
+        subject: 'Rechnung ${data.number}',
+        text: 'Rechnung: ${data.number}',
       ),
     );
   }

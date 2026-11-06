@@ -36,4 +36,25 @@ void main() {
     expect(json, contains('2026-11-05T08:00:00'));
     expect(json, contains('"ended_at"'));
   });
+
+  test('buildInvoiceManifest baut ein Rechnungs-Manifest', () {
+    final InvoiceFeedbackData data = InvoiceFeedbackData(
+      number: 'RE-2026-0001',
+      netCents: 10000,
+      grossCents: 11900,
+    );
+
+    final manifest = buildInvoiceManifest(
+      packageId: 'pkg-1',
+      data: data,
+      senderName: 'Sub GmbH',
+    );
+
+    expect(manifest.id, 'pkg-1');
+    expect(manifest.type, 'rechnung');
+    expect(manifest.invoiceNumber, 'RE-2026-0001');
+    expect(manifest.netCents, 10000);
+    expect(manifest.grossCents, 11900);
+    expect(manifest.senderName, 'Sub GmbH');
+  });
 }
