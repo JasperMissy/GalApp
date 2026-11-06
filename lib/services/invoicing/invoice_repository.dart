@@ -52,3 +52,8 @@ final invoiceRepositoryProvider = Provider<InvoiceRepository>((ref) {
 final issuedInvoicesProvider = FutureProvider<List<model.Invoice>>((ref) {
   return ref.watch(invoiceRepositoryProvider).issuedInvoices();
 });
+
+final invoicesByOrderProvider =
+    FutureProvider.family<List<model.Invoice>, String>((ref, orderId) {
+  return ref.watch(invoiceRepositoryProvider).invoicesByOrder(orderId);
+});

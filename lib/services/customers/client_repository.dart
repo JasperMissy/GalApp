@@ -57,3 +57,8 @@ final clientRepositoryProvider = Provider<ClientRepository>((ref) {
 final clientsProvider = FutureProvider<List<model.Client>>((ref) {
   return ref.watch(clientRepositoryProvider).watchAll().first;
 });
+
+final clientByIdProvider =
+    FutureProvider.family<model.Client?, String>((ref, id) {
+  return ref.watch(clientRepositoryProvider).getById(id);
+});

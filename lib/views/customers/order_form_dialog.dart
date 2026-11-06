@@ -10,7 +10,13 @@ import 'package:galabau_app/services/orders/order_repository.dart';
 /// Formular zum Anlegen eines Auftrags (Kunde, Titel, Beschreibung,
 /// Ausführungsdatum, wiederkehrend, Notizen).
 class OrderFormDialog extends ConsumerStatefulWidget {
-  const OrderFormDialog({super.key});
+  const OrderFormDialog({super.key, this.clientId, this.order});
+
+  /// Optionaler Start-Kunde (Edit-Modus).
+  final String? clientId;
+
+  /// Im Edit-Modus der zu bearbeitende Auftrag.
+  final Order? order;
 
   @override
   ConsumerState<OrderFormDialog> createState() => _OrderFormDialogState();
@@ -27,6 +33,22 @@ class _OrderFormDialogState extends ConsumerState<OrderFormDialog> {
   bool _saving = false;
 
   @override
+  void initState() {
+    super.initState();
+    final Order? order = widget.order;
+    if (order != null) {
+      _clientId = order.clientId;
+      _title.text = order.title;
+      _description.text = order.description;
+      _notes.text = order.notes;
+      _dueDate = order.dueDateStart;
+      _recurring = order.recurring;
+    } else if (widget.clientId != null) {
+      _clientId = widget.clientId;
+    }
+  }
+
+  @override
   void dispose() {
     _title.dispose();
     _description.dispose();
@@ -39,20 +61,38 @@ class _OrderFormDialogState extends ConsumerState<OrderFormDialog> {
     final String? clientId = _clientId;
     if (clientId == null) return;
     setState(() => _saving = true);
-    await ref.read(orderRepositoryProvider).insert(
-          Order(
-            id: newId(),
-            clientId: clientId,
-            title: _title.text.trim(),
-            description: _description.text.trim(),
-            createdAt: DateTime.now(),
-            dueDateStart: _dueDate,
-            dueDateEnd: null,
-            status: OrderStatus.offen,
-            recurring: _recurring,
-            notes: _notes.text.trim(),
-          ),
-        );
+    final Order? existing = widget.order;
+    if (existing == null) {
+      await ref.read(orderRepositoryProvider).insert(
+            Order(
+              id: newId(),
+              clientId: clientId,
+              title: _title.text.trim(),
+              description: _description.text.trim(),
+              createdAt: DateTime.now(),
+              dueDateStart: _dueDate,
+              dueDateEnd: null,
+              status: OrderStatus.offen,
+              recurring: _recurring,
+              notes: _notes.text.trim(),
+            ),
+          );
+    } else {
+      await ref.read(orderRepositoryProvider).update(
+            Order(
+              id: existing.id,
+              clientId: clientId,
+              title: _title.text.trim(),
+              description: _description.text.trim(),
+              createdAt: existing.createdAt,
+              dueDateStart: _dueDate,
+              dueDateEnd: existing.dueDateEnd,
+              status: existing.status,
+              recurring: _recurring,
+              notes: _notes.text.trim(),
+            ),
+          );
+    }
     ref.invalidate(ordersProvider);
     if (mounted) Navigator.of(context).pop(true);
   }
@@ -67,7 +107,7 @@ class _OrderFormDialogState extends ConsumerState<OrderFormDialog> {
     final AsyncValue<List<Client>> clients = ref.watch(clientsProvider);
 
     return AlertDialog(
-      title: const Text('Auftrag anlegen'),
+      title: Text(widget.order == null ? 'Auftrag anlegen' : 'Auftrag bearbeiten'),
       content: Form(
         key: _formKey,
         child: SingleChildScrollView(
