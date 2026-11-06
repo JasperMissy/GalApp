@@ -29,6 +29,18 @@ class InvoiceRepository {
     final rows = await query.get();
     return rows.map(_toModel).toList();
   }
+  /// Gestellte Rechnungen eines Kunden, neueste zuerst.
+  Future<List<model.Invoice>> invoicesByClient(String clientId) async {
+    final query = (db.select(db.invoices)
+          ..where((t) =>
+              t.clientId.equals(clientId) &
+              t.type.equals('invoice') &
+              t.status.equals('issued')))
+      ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]);
+    final rows = await query.get();
+    return rows.map(_toModel).toList();
+  }
+
   model.Invoice _toModel(Invoice row) => model.Invoice(
         id: row.id,
         number: row.number,
@@ -56,4 +68,9 @@ final issuedInvoicesProvider = FutureProvider<List<model.Invoice>>((ref) {
 final invoicesByOrderProvider =
     FutureProvider.family<List<model.Invoice>, String>((ref, orderId) {
   return ref.watch(invoiceRepositoryProvider).invoicesByOrder(orderId);
+});
+
+final invoicesByClientProvider =
+    FutureProvider.family<List<model.Invoice>, String>((ref, clientId) {
+  return ref.watch(invoiceRepositoryProvider).invoicesByClient(clientId);
 });

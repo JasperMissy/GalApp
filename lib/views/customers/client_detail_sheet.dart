@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:galabau_app/models/client.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'client_invoices_screen.dart';
+
 /// Kundendetails mit Schnellaktionen (Anrufen, Navigation, E-Mail) laut
 /// Vision, Abschnitt 3.2.
 class ClientDetailSheet extends StatelessWidget {
@@ -55,7 +57,26 @@ class ClientDetailSheet extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 16),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(Icons.folder_outlined,
+                color: Theme.of(context).colorScheme.primary),
+            title: const Text('Rechnungsordner',
+                style: TextStyle(fontWeight: FontWeight.w600)),
+            subtitle: const Text('Alle Rechnungen dieses Kunden'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _openInvoices(context),
+          ),
         ],
+      ),
+    );
+  }
+
+  void _openInvoices(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ClientInvoicesScreen(clientId: client.id),
       ),
     );
   }
