@@ -28,6 +28,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   };
   bool _loaded = false;
   bool _saving = false;
+  bool _isKleinunternehmer = false;
 
   @override
   void dispose() {
@@ -43,6 +44,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     for (final MapEntry<String, TextEditingController> e in _controllers.entries) {
       entries[e.key] = e.value.text.trim();
     }
+    entries[SettingsKeys.kleinunternehmer] = _isKleinunternehmer ? 'ja' : 'nein';
     await ref.read(settingsRepositoryProvider).saveAll(entries);
     ref.invalidate(settingsProvider);
     if (mounted) {
@@ -65,6 +67,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             for (final String key in _controllers.keys) {
               _controllers[key]!.text = values[key] ?? '';
             }
+            _isKleinunternehmer =
+                values[SettingsKeys.kleinunternehmer] == 'ja';
             _loaded = true;
           }
           return _form();
@@ -125,6 +129,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           const SizedBox(height: 24),
           const _SectionLabel('Steuer & Zahlung'),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Kleinunternehmer (§19 UStG)'),
+            subtitle: const Text(
+                'Rechnungen ohne MwSt-Ausweis, kein Vorsteuerabzug.'),
+            value: _isKleinunternehmer,
+            onChanged: (bool value) =>
+                setState(() => _isKleinunternehmer = value),
+          ),
+          const SizedBox(height: 8),
           TextFormField(
             controller: _controllers[SettingsKeys.steuernummer],
             decoration: const InputDecoration(labelText: 'Steuernummer'),

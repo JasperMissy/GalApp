@@ -34,6 +34,14 @@ class InvoiceService {
   final AppDatabase db;
   final NumberAssigner assigner;
 
+  /// Reserviert die nächste Nummer für [type] (`invoice`/`offer`), ohne eine
+  /// Rechnung anzulegen. Wird für den atomaren PDF-vor-DB-Fluss genutzt.
+  Future<String> reserveNumber(String type, {DateTime? date}) {
+    final InvoiceDocumentType documentType =
+        type == 'offer' ? InvoiceDocumentType.offer : InvoiceDocumentType.invoice;
+    return assigner.assignNumber(documentType, date: date);
+  }
+
   Future<model.Invoice> createInvoice({
     required String clientId,
     String? orderId,
@@ -185,6 +193,80 @@ class InvoiceService {
     return row == null ? null : _toModel(row);
   }
 
+  /// Storniert eine gestellte Rechnung: legt eine Stornorechnung mit negativen
+  /// Beträgen, eigener Nummer (`ST-…`) und Verweis auf das Original an und
+  /// protokolliert den Vorgang. Die ursprüngliche Rechnung bleibt unverändert.
+  Future<model.Invoice> voidInvoice(String originalId) async {
+    final Invoice? original = await (db.select(db.invoices)
+          ..where((t) => t.id.equals(originalId)))
+        .getSingleOrNull();
+    if (original == null) {
+      throw StateError('Rechnung nicht gefunden.');
+    }
+    if (original.status != 'issued') {
+      throw StateError('Nur gestellte Rechnungen können storniert werden.');
+    }
+    if (original.stornoOfId != null) {
+      throw StateError('Eine Stornorechnung kann nicht erneut storniert werden.');
+    }
+
+    final List<item.InvoiceItem> items = await loadItems(originalId);
+    final DateTime now = DateTime.now();
+    final String number =
+        await assigner.assignNumber(InvoiceDocumentType.storno, date: now);
+    final String id = newId();
+
+    await db.transaction(() async {
+      await db.into(db.invoices).insert(
+            InvoicesCompanion.insert(
+              id: id,
+              number: Value(number),
+              type: const Value('invoice'),
+              clientId: original.clientId,
+              orderId: Value(original.orderId),
+              colleagueId: Value(original.colleagueId),
+              stornoOfId: Value(originalId),
+              status: const Value('issued'),
+              issuedDate: Value(now),
+              netCents: Value(-original.netCents),
+              vatRateBp: Value(original.vatRateBp),
+              vatCents: Value(-original.vatCents),
+              grossCents: Value(-original.grossCents),
+              createdAt: now,
+            ),
+          );
+
+      for (final item.InvoiceItem it in items) {
+        await db.into(db.invoiceItems).insert(
+              InvoiceItemsCompanion.insert(
+                id: newId(),
+                invoiceId: id,
+                position: it.position,
+                description: it.description,
+                quantityMilli: it.quantityMilli,
+                unit: Value(it.unit),
+                unitPriceCents: -it.unitPriceCents,
+                totalCents: -it.totalCents,
+              ),
+            );
+      }
+
+      await db.into(db.auditLog).insert(
+            AuditLogCompanion.insert(
+              id: newId(),
+              event: 'storno',
+              objectId: Value(originalId),
+              details: Value('Stornorechnung $number zu ${original.number}'),
+              createdAt: now,
+            ),
+          );
+    });
+
+    final row = await (db.select(db.invoices)..where((t) => t.id.equals(id)))
+        .getSingle();
+    return _toModel(row);
+  }
+
   Future<void> _insertItems(
     String invoiceId,
     List<InvoiceLineInput> lines,
@@ -220,6 +302,8 @@ class InvoiceService {
         vatCents: row.vatCents,
         grossCents: row.grossCents,
         createdAt: row.createdAt,
+        colleagueId: row.colleagueId,
+        stornoOfId: row.stornoOfId,
       );
 
   Future<List<item.InvoiceItem>> loadItems(String invoiceId) async {

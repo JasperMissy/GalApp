@@ -295,6 +295,8 @@ class _WorkDocumentationTabState extends ConsumerState<WorkDocumentationTab> {
                           '${_time(e.startedAt)} – '
                           '${e.endedAt == null ? 'läuft' : _time(e.endedAt!)}',
                         ),
+                        subtitle:
+                            Text('Dauer: ${_durationText(e.duration())}'),
                       ),
                   ],
                 ),
@@ -373,4 +375,11 @@ class _WorkDocumentationTabState extends ConsumerState<WorkDocumentationTab> {
   String _time(DateTime dateTime) =>
       '${dateTime.hour.toString().padLeft(2, '0')}:'
       '${dateTime.minute.toString().padLeft(2, '0')}';
+
+  String _durationText(Duration d) {
+    final int h = d.inHours;
+    final int m = d.inMinutes % 60;
+    if (h > 0) return '$h h ${m.toString().padLeft(2, '0')} min';
+    return '$m min';
+  }
 }

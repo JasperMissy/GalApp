@@ -74,4 +74,35 @@ class Order {
         'external_address': externalAddress,
         'sender_name': senderName,
       };
+
+  Order copyWith({
+    String? clientId,
+    String? title,
+    String? description,
+    DateTime? dueDateStart,
+    DateTime? dueDateEnd,
+    OrderStatus? status,
+    bool? recurring,
+    String? notes,
+    String? origin,
+    String? packageId,
+    String? externalAddress,
+    String? senderName,
+  }) =>
+      Order(
+        id: id,
+        clientId: clientId ?? this.clientId,
+        title: title ?? this.title,
+        description: description ?? this.description,
+        createdAt: createdAt,
+        dueDateStart: dueDateStart ?? this.dueDateStart,
+        dueDateEnd: dueDateEnd ?? this.dueDateEnd,
+        status: status ?? this.status,
+        recurring: recurring ?? this.recurring,
+        notes: notes ?? this.notes,
+        origin: origin ?? this.origin,
+        packageId: packageId ?? this.packageId,
+        externalAddress: externalAddress ?? this.externalAddress,
+        senderName: senderName ?? this.senderName,
+      );
 }

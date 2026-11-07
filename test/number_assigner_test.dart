@@ -64,6 +64,13 @@ void main() {
   test('isNumberAvailable erkennt vergebene Nummern', () async {
     expect(await assigner.isNumberAvailable('RE-2026-0001'), isTrue);
 
+    await db.into(db.clients).insert(
+          ClientsCompanion.insert(
+            id: 'k-1',
+            name: 'Max Mustermann',
+            createdAt: DateTime(2026),
+          ),
+        );
     await db.into(db.invoices).insert(
           InvoicesCompanion.insert(
             id: 'r-1',
@@ -84,6 +91,15 @@ void main() {
     final number = await assigner.assignNumber(InvoiceDocumentType.invoice,
         date: DateTime(2026));
     expect(number, 'RG-2026-0001');
+  });
+
+  test('Storno-Nummernfolge nutzt das Präfix ST', () async {
+    final first = await assigner.assignNumber(InvoiceDocumentType.storno,
+        date: DateTime(2026));
+    final second = await assigner.assignNumber(InvoiceDocumentType.storno,
+        date: DateTime(2026));
+    expect(first, 'ST-2026-0001');
+    expect(second, 'ST-2026-0002');
   });
 
   test('Leeres Präfix-Setting fällt auf den Standard zurück', () async {

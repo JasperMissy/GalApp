@@ -14,6 +14,7 @@ class Invoice {
     required this.grossCents,
     required this.createdAt,
     this.colleagueId,
+    this.stornoOfId,
   });
 
   factory Invoice.fromJson(Map<String, dynamic> json) => Invoice(
@@ -32,6 +33,7 @@ class Invoice {
         grossCents: json['gross_cents'] as int? ?? 0,
         createdAt: DateTime.parse(json['created_at'] as String),
         colleagueId: json['colleague_id'] as String?,
+        stornoOfId: json['storno_of_id'] as String?,
       );
 
   final String id;
@@ -47,6 +49,7 @@ class Invoice {
   final int grossCents;
   final DateTime createdAt;
   final String? colleagueId;
+  final String? stornoOfId;
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -62,5 +65,6 @@ class Invoice {
         'gross_cents': grossCents,
         'created_at': createdAt.toIso8601String(),
         'colleague_id': colleagueId,
+        'storno_of_id': stornoOfId,
       };
 }

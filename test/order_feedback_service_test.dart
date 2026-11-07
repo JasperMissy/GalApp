@@ -24,6 +24,7 @@ void main() {
         startedAt: DateTime(2026, 11, 5, 8),
         endedAt: DateTime(2026, 11, 5, 12),
         pausedAt: null,
+        pausedMilliseconds: 0,
         createdAt: DateTime(2026, 11, 5, 8),
       ),
     ];

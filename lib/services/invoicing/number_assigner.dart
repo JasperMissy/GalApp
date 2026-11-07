@@ -3,7 +3,7 @@ import 'package:drift/drift.dart';
 import '../database/app_database.dart';
 
 /// Dokumenttypen der Rechnungs-Engine (Spalte `invoices.type`).
-enum InvoiceDocumentType { invoice, offer }
+enum InvoiceDocumentType { invoice, offer, storno }
 
 /// Vergibt fortlaufende, lückenlose Dokumentnummern
 /// (`RE-2026-0001` bzw. `AN-2026-0001`).
@@ -19,11 +19,13 @@ class NumberAssigner {
   static const _defaultPrefixes = {
     InvoiceDocumentType.invoice: 'RE',
     InvoiceDocumentType.offer: 'AN',
+    InvoiceDocumentType.storno: 'ST',
   };
 
   static const _prefixKeys = {
     InvoiceDocumentType.invoice: 'nummern_praefix_rechnung',
     InvoiceDocumentType.offer: 'nummern_praefix_angebot',
+    InvoiceDocumentType.storno: 'nummern_praefix_storno',
   };
 
   /// Vergibt die nächste Nummer innerhalb einer Transaktion:

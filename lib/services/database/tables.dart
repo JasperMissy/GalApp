@@ -54,6 +54,7 @@ class Invoices extends Table {
   TextColumn get clientId => text().references(Clients, #id)();
   TextColumn get orderId => text().nullable()();
   TextColumn get colleagueId => text().nullable()();
+  TextColumn get stornoOfId => text().nullable()();
   TextColumn get status => text().withDefault(const Constant('draft'))();
   TextColumn get issuedDate =>
       text().map(const IsoDateConverter()).nullable()();
@@ -130,7 +131,9 @@ class Orders extends Table {
 /// Geteilte/empfangene Auftrags-Pakete (Subunternehmer-Workflow).
 class OrderPackages extends Table {
   TextColumn get id => text()();
-  TextColumn get orderId => text().nullable()();
+  TextColumn get orderId => text()
+      .nullable()
+      .references(Orders, #id, onDelete: KeyAction.cascade)();
   TextColumn get colleagueId => text().nullable()();
   TextColumn get direction =>
       text().withDefault(const Constant('outgoing'))();
@@ -164,10 +167,12 @@ class Colleagues extends Table {
 /// Zeiterfassung zur Arbeitsdokumentation (Subunternehmer-Workflow).
 class WorkTimeEntries extends Table {
   TextColumn get id => text()();
-  TextColumn get orderId => text()();
+  TextColumn get orderId =>
+      text().references(Orders, #id, onDelete: KeyAction.cascade)();
   TextColumn get startedAt => text().map(const IsoDateConverter())();
   TextColumn get endedAt => text().map(const IsoDateConverter()).nullable()();
   TextColumn get pausedAt => text().map(const IsoDateConverter()).nullable()();
+  IntColumn get pausedMilliseconds => integer().withDefault(const Constant(0))();
   TextColumn get createdAt => text().map(const IsoDateConverter())();
 
   @override
@@ -176,10 +181,44 @@ class WorkTimeEntries extends Table {
 
 /// Anmerkung zur Arbeitsdokumentation (ein Text je Auftrag).
 class WorkNotes extends Table {
-  TextColumn get orderId => text()();
+  TextColumn get orderId =>
+      text().references(Orders, #id, onDelete: KeyAction.cascade)();
   TextColumn get content => text().withDefault(const Constant(''))();
   TextColumn get updatedAt => text().map(const IsoDateConverter())();
 
   @override
   Set<Column> get primaryKey => {orderId};
+}
+
+/// Betriebsausgaben (Material, Fremdleistung, Personal) mit optionalem
+/// Auftrags- und Kollegenbezug. Belege liegen als Datei im Dateisystem.
+@TableIndex(name: 'idx_expenses_order', columns: {#orderId})
+class Expenses extends Table {
+  TextColumn get id => text()();
+  TextColumn get orderId =>
+      text().nullable().references(Orders, #id, onDelete: KeyAction.setNull)();
+  TextColumn get colleagueId => text()
+      .nullable()
+      .references(Colleagues, #id, onDelete: KeyAction.setNull)();
+  TextColumn get category => text().withDefault(const Constant('material'))();
+  IntColumn get netCents => integer().withDefault(const Constant(0))();
+  IntColumn get vatRateBp => integer().withDefault(const Constant(0))();
+  IntColumn get grossCents => integer().withDefault(const Constant(0))();
+  TextColumn get filePath => text().nullable()();
+  TextColumn get bookedAt => text().map(const IsoDateConverter())();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Änderungsprotokoll (GoBD): dokumentiert unumkehrbare Vorgänge wie Storno.
+class AuditLog extends Table {
+  TextColumn get id => text()();
+  TextColumn get event => text()();
+  TextColumn get objectId => text().nullable()();
+  TextColumn get details => text().withDefault(const Constant(''))();
+  TextColumn get createdAt => text().map(const IsoDateConverter())();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }

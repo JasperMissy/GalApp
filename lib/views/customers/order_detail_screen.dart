@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:galabau_app/models/client.dart';
 import 'package:galabau_app/models/colleague.dart';
+import 'package:galabau_app/models/expense.dart';
 import 'package:galabau_app/models/invoice.dart';
 import 'package:galabau_app/models/order.dart';
 import 'package:galabau_app/models/order_package.dart' as model;
@@ -15,6 +16,7 @@ import 'package:galabau_app/models/work_time_entry.dart';
 import 'package:galabau_app/services/colleagues/colleague_repository.dart';
 import 'package:galabau_app/services/customers/client_repository.dart';
 import 'package:galabau_app/services/id_generator.dart';
+import 'package:galabau_app/services/invoicing/expense_repository.dart';
 import 'package:galabau_app/services/invoicing/invoice_repository.dart';
 import 'package:galabau_app/services/orders/order_package_repository.dart';
 import 'package:galabau_app/services/orders/order_repository.dart';
@@ -324,74 +326,96 @@ class _InvoicesTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<List<Invoice>> invoices =
         ref.watch(invoicesByOrderProvider(order.id));
+    final AsyncValue<List<Expense>> expenses =
+        ref.watch(expensesByOrderProvider(order.id));
 
-    return invoices.when(
-      data: (List<Invoice> all) {
-        final List<Invoice> own =
-            all.where((Invoice i) => i.colleagueId == null).toList();
-        final List<Invoice> associated =
-            all.where((Invoice i) => i.colleagueId != null).toList();
-        return ListView(
-          padding: const EdgeInsets.all(16),
+    if (invoices.isLoading || expenses.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (invoices.hasError || expenses.hasError) {
+      return ErrorState(
+        onRetry: () {
+          ref.invalidate(invoicesByOrderProvider(order.id));
+          ref.invalidate(expensesByOrderProvider(order.id));
+        },
+      );
+    }
+
+    final List<Invoice> all = invoices.requireValue;
+    final List<Expense> allExpenses = expenses.requireValue;
+    final List<Invoice> own =
+        all.where((Invoice i) => i.colleagueId == null).toList();
+    final List<Invoice> subcontractor =
+        all.where((Invoice i) => i.colleagueId != null).toList();
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: <Widget>[
+        Row(
           children: <Widget>[
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _openCalculation(context),
-                    icon: const Icon(Icons.calculate_outlined),
-                    label: const Text('Kalkulation'),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: () => _generate(context, ref),
-                    icon: const Icon(Icons.receipt_long),
-                    label: const Text('Rechnung'),
-                  ),
-                ),
-              ],
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () => _openCalculation(context),
+                icon: const Icon(Icons.calculate_outlined),
+                label: const Text('Kalkulation'),
+              ),
             ),
-            const SizedBox(height: 8),
-            OutlinedButton.icon(
-              onPressed: () => _addAssociated(context, ref),
-              icon: const Icon(Icons.attach_file),
-              label: const Text('Assoziierte Rechnung hinzufügen'),
+            const SizedBox(width: 8),
+            Expanded(
+              child: FilledButton.icon(
+                onPressed: () => _generate(context, ref),
+                icon: const Icon(Icons.receipt_long),
+                label: const Text('Rechnung'),
+              ),
             ),
-            const SizedBox(height: 16),
-            Text('Rechnungen',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleSmall
-                    ?.copyWith(fontWeight: FontWeight.w700)),
-            if (own.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
-                child: Text('Noch keine Rechnungen.'),
-              )
-            else
-              for (final Invoice invoice in own) _invoiceTile(invoice),
-            const SizedBox(height: 16),
-            Text('Assoziierte Rechnungen (Material/Personal)',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleSmall
-                    ?.copyWith(fontWeight: FontWeight.w700)),
-            if (associated.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
-                child: Text('Noch keine assoziierten Rechnungen.'),
-              )
-            else
-              for (final Invoice invoice in associated) _invoiceTile(invoice),
           ],
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, _) => ErrorState(
-        onRetry: () => ref.invalidate(invoicesByOrderProvider(order.id)),
-      ),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          onPressed: () => _addAssociated(context, ref),
+          icon: const Icon(Icons.attach_file),
+          label: const Text('Beleg (Material/Personal) hinzufügen'),
+        ),
+        const SizedBox(height: 16),
+        Text('Rechnungen',
+            style: Theme.of(context)
+                .textTheme
+                .titleSmall
+                ?.copyWith(fontWeight: FontWeight.w700)),
+        if (own.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Text('Noch keine Rechnungen.'),
+          )
+        else
+          for (final Invoice invoice in own) _invoiceTile(invoice),
+        const SizedBox(height: 16),
+        Text('Subunternehmer-Rechnungen',
+            style: Theme.of(context)
+                .textTheme
+                .titleSmall
+                ?.copyWith(fontWeight: FontWeight.w700)),
+        if (subcontractor.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Text('Noch keine Subunternehmer-Rechnungen.'),
+          )
+        else
+          for (final Invoice invoice in subcontractor) _invoiceTile(invoice),
+        const SizedBox(height: 16),
+        Text('Belege (Material/Personal)',
+            style: Theme.of(context)
+                .textTheme
+                .titleSmall
+                ?.copyWith(fontWeight: FontWeight.w700)),
+        if (allExpenses.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Text('Noch keine Belege.'),
+          )
+        else
+          for (final Expense expense in allExpenses) _expenseTile(expense),
+      ],
     );
   }
 
@@ -408,6 +432,28 @@ class _InvoicesTab extends ConsumerWidget {
     );
   }
 
+  Widget _expenseTile(Expense expense) {
+    final String categoryLabel =
+        expense.category == 'personal' ? 'Personalkosten' : 'Materialkosten';
+    final List<String> pathParts = expense.filePath
+            ?.split(RegExp(r'[/\\]'))
+            .where((String part) => part.isNotEmpty)
+            .toList() ??
+        const <String>[];
+    final String? fileName = pathParts.isEmpty ? null : pathParts.last;
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      child: ListTile(
+        leading: Icon(expense.category == 'personal'
+            ? Icons.person_outline
+            : Icons.inventory_2_outlined),
+        title: Text(fileName ?? categoryLabel),
+        subtitle: Text('$categoryLabel · ${_date(expense.bookedAt)}'),
+        trailing: Text('${_euro(expense.grossCents)} €'),
+      ),
+    );
+  }
+
   void _openCalculation(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -417,8 +463,6 @@ class _InvoicesTab extends ConsumerWidget {
   }
 
   Future<void> _addAssociated(BuildContext context, WidgetRef ref) async {
-    final String? clientId = order.clientId;
-    if (clientId == null) return;
     final AssociatedInvoiceData? data =
         await showDialog<AssociatedInvoiceData>(
       context: context,
@@ -428,30 +472,25 @@ class _InvoicesTab extends ConsumerWidget {
 
     final Directory base = await getApplicationDocumentsDirectory();
     final WorkMediaService mediaService = WorkMediaService(baseDirectory: base);
-    await mediaService.saveMedia(
+    final String filePath = await mediaService.saveMedia(
       orderTitle: order.title,
       subfolder: 'Assoziierte Rechnungen/${data.category}',
       fileName: data.fileName,
       bytes: data.bytes,
     );
 
-    await ref.read(invoiceRepositoryProvider).insert(Invoice(
-      id: newId(),
-      number: data.fileName,
-      type: 'invoice',
-      clientId: clientId,
-      orderId: order.id,
-      colleagueId: null,
-      status: 'issued',
-      issuedDate: DateTime.now(),
-      netCents: 0,
-      vatRateBp: 1900,
-      vatCents: 0,
-      grossCents: 0,
-      createdAt: DateTime.now(),
-    ));
+    await ref.read(expenseRepositoryProvider).insert(Expense(
+          id: newId(),
+          orderId: order.id,
+          category: data.category,
+          netCents: 0,
+          vatRateBp: 0,
+          grossCents: 0,
+          filePath: filePath,
+          bookedAt: DateTime.now(),
+        ));
 
-    ref.invalidate(invoicesByOrderProvider(order.id));
+    ref.invalidate(expensesByOrderProvider(order.id));
   }
 
   void _generate(BuildContext context, WidgetRef ref) {

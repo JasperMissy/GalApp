@@ -28,7 +28,14 @@ class InvoiceStorageService {
     );
     await dir.create(recursive: true);
     final file = File(p.join(dir.path, fileName));
-    await file.writeAsBytes(pdfBytes, flush: true);
+    // Atomar schreiben: erst temporäre Datei, dann umbenennen, damit bei einem
+    // Fehler nie eine halbe PDF-Datei zurückbleibt.
+    final File tmp = File('${file.path}.tmp');
+    await tmp.writeAsBytes(pdfBytes, flush: true);
+    if (await file.exists()) {
+      await file.delete();
+    }
+    await tmp.rename(file.path);
     return file.path;
   }
 

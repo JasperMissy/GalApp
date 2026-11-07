@@ -21,29 +21,46 @@ class WorkDocumentationRepository {
     return query.watch().map((rows) => rows.map(_toTime).toList());
   }
 
-  /// Startet einen neuen Zeiteintrag (ohne Ende).
-  Future<void> startTime(String orderId) =>
-      db.into(db.workTimeEntries).insert(
-            WorkTimeEntriesCompanion.insert(
-              id: newId(),
-              orderId: orderId,
-              startedAt: DateTime.now(),
-              createdAt: DateTime.now(),
-            ),
-          );
+  /// Startet einen neuen Zeiteintrag. Läuft für den Auftrag bereits einer,
+  /// wird dessen Id zurückgegeben, statt einen zweiten anzulegen.
+  Future<String> startTime(String orderId) async {
+    final WorkTimeEntry? open = await (db.select(db.workTimeEntries)
+          ..where((t) => t.orderId.equals(orderId) & t.endedAt.isNull())
+          ..orderBy([(t) => OrderingTerm.desc(t.startedAt)])
+          ..limit(1))
+        .getSingleOrNull();
+    if (open != null) return open.id;
 
-  /// Beendet den letzten offenen Zeiteintrag.
+    final String id = newId();
+    await db.into(db.workTimeEntries).insert(
+          WorkTimeEntriesCompanion.insert(
+            id: id,
+            orderId: orderId,
+            startedAt: DateTime.now(),
+            createdAt: DateTime.now(),
+          ),
+        );
+    return id;
+  }
+
+  /// Beendet den letzten offenen Zeiteintrag. Eine noch laufende Pause wird
+  /// dabei in [WorkTimeEntries.pausedMilliseconds] übernommen.
   Future<void> finishTime(String orderId) async {
-    final row = await (db.select(db.workTimeEntries)
+    final WorkTimeEntry? row = await (db.select(db.workTimeEntries)
           ..where((t) => t.orderId.equals(orderId) & t.endedAt.isNull())
           ..orderBy([(t) => OrderingTerm.desc(t.startedAt)])
           ..limit(1))
         .getSingleOrNull();
     if (row == null) return;
+
+    final DateTime now = DateTime.now();
+    final int pendingPause =
+        row.pausedAt == null ? 0 : now.difference(row.pausedAt!).inMilliseconds;
     await (db.update(db.workTimeEntries)..where((t) => t.id.equals(row.id)))
         .write(WorkTimeEntriesCompanion(
-          endedAt: Value(DateTime.now()),
+          endedAt: Value(now),
           pausedAt: Value<DateTime?>(null),
+          pausedMilliseconds: Value(row.pausedMilliseconds + pendingPause),
         ));
   }
 
@@ -62,9 +79,10 @@ class WorkDocumentationRepository {
         .write(WorkTimeEntriesCompanion(pausedAt: Value(DateTime.now())));
   }
 
-  /// Setzt den letzten pausierten Zeiteintrag fort.
+  /// Setzt den letzten pausierten Zeiteintrag fort und übernimmt die bislang
+  /// aufgelaufene Pause in [WorkTimeEntries.pausedMilliseconds].
   Future<void> resumeTime(String orderId) async {
-    final row = await (db.select(db.workTimeEntries)
+    final WorkTimeEntry? row = await (db.select(db.workTimeEntries)
           ..where((t) =>
               t.orderId.equals(orderId) &
               t.endedAt.isNull() &
@@ -73,8 +91,13 @@ class WorkDocumentationRepository {
           ..limit(1))
         .getSingleOrNull();
     if (row == null) return;
+
+    final Duration paused = DateTime.now().difference(row.pausedAt!);
     await (db.update(db.workTimeEntries)..where((t) => t.id.equals(row.id)))
-        .write(WorkTimeEntriesCompanion(pausedAt: Value<DateTime?>(null)));
+        .write(WorkTimeEntriesCompanion(
+          pausedAt: Value<DateTime?>(null),
+          pausedMilliseconds: Value(row.pausedMilliseconds + paused.inMilliseconds),
+        ));
   }
 
   /// Anmerkung eines Auftrags (oder null).
@@ -103,6 +126,7 @@ class WorkDocumentationRepository {
         startedAt: row.startedAt,
         endedAt: row.endedAt,
         pausedAt: row.pausedAt,
+        pausedMilliseconds: row.pausedMilliseconds,
         createdAt: row.createdAt,
       );
 

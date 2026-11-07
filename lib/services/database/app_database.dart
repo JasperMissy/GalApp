@@ -19,6 +19,8 @@ part 'app_database.g.dart';
     Colleagues,
     WorkTimeEntries,
     WorkNotes,
+    Expenses,
+    AuditLog,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -36,7 +38,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -79,6 +81,101 @@ class AppDatabase extends _$AppDatabase {
           if (from < 7) {
             await m.addColumn(workTimeEntries, workTimeEntries.pausedAt);
           }
+          if (from < 8) {
+            await _migrateToV8(m);
+          }
+          if (from < 9) {
+            await m.createTable(expenses);
+          }
+          if (from < 10) {
+            await m.addColumn(invoices, invoices.stornoOfId);
+            await m.createTable(auditLog);
+          }
+        },
+        beforeOpen: (details) async {
+          // SQLite erzwingt Fremdschlüssel nur, wenn sie aktiviert sind.
+          await customStatement('PRAGMA foreign_keys = ON');
+          await _createGoBdTriggers();
         },
       );
+
+  /// v8: Fremdschlüssel mit Cascade für Arbeitsdaten und Pakete, Bereinigung
+  /// verwaister Zeilen und fehlende Indizes nachziehen.
+  Future<void> _migrateToV8(Migrator m) async {
+    await customStatement(
+      'DELETE FROM `work_time_entries` '
+      'WHERE `order_id` NOT IN (SELECT `id` FROM `orders`)',
+    );
+    await customStatement(
+      'DELETE FROM `work_notes` '
+      'WHERE `order_id` NOT IN (SELECT `id` FROM `orders`)',
+    );
+    await customStatement(
+      'DELETE FROM `order_packages` WHERE `order_id` IS NOT NULL '
+      'AND `order_id` NOT IN (SELECT `id` FROM `orders`)',
+    );
+
+    // Pausen-Spalte vor dem Umbau ergänzen, damit der Neuaufbau sie kopiert.
+    await m.addColumn(workTimeEntries, workTimeEntries.pausedMilliseconds);
+
+    await m.alterTable(TableMigration(workTimeEntries));
+    await m.alterTable(TableMigration(workNotes));
+    await m.alterTable(TableMigration(orderPackages));
+
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS `idx_orders_client` '
+      'ON `orders` (`client_id`)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS `idx_invoices_client` '
+      'ON `invoices` (`client_id`)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS `idx_invoices_order` '
+      'ON `invoices` (`order_id`)',
+    );
+  }
+
+  /// GoBD: gestellte Rechnungen und deren Positionen sind nach dem Stellen
+  /// unveränderlich. Die Trigger greifen zusätzlich zur Repository-Logik.
+  Future<void> _createGoBdTriggers() async {
+    await customStatement('''
+      CREATE TRIGGER IF NOT EXISTS trg_invoices_immutable_update
+      BEFORE UPDATE ON invoices
+      WHEN OLD.status = 'issued'
+      BEGIN
+        SELECT RAISE(ABORT, 'gestellte Rechnungen sind unveränderlich');
+      END;
+    ''');
+    await customStatement('''
+      CREATE TRIGGER IF NOT EXISTS trg_invoices_immutable_delete
+      BEFORE DELETE ON invoices
+      WHEN OLD.status = 'issued'
+      BEGIN
+        SELECT RAISE(ABORT, 'gestellte Rechnungen können nicht gelöscht werden');
+      END;
+    ''');
+    await customStatement('''
+      CREATE TRIGGER IF NOT EXISTS trg_invoice_items_immutable_update
+      BEFORE UPDATE ON invoice_items
+      WHEN EXISTS (
+        SELECT 1 FROM invoices
+        WHERE id = OLD.invoice_id AND status = 'issued'
+      )
+      BEGIN
+        SELECT RAISE(ABORT, 'Positionen gestellter Rechnungen sind unveränderlich');
+      END;
+    ''');
+    await customStatement('''
+      CREATE TRIGGER IF NOT EXISTS trg_invoice_items_immutable_delete
+      BEFORE DELETE ON invoice_items
+      WHEN EXISTS (
+        SELECT 1 FROM invoices
+        WHERE id = OLD.invoice_id AND status = 'issued'
+      )
+      BEGIN
+        SELECT RAISE(ABORT, 'Positionen gestellter Rechnungen können nicht gelöscht werden');
+      END;
+    ''');
+  }
 }

@@ -69,6 +69,14 @@ class InvoiceRepository {
     return rows.map(_toModel).toList();
   }
 
+  /// Stornorechnung zu einer gestellten Rechnung (oder null).
+  Future<model.Invoice?> creditNoteFor(String originalId) async {
+    final row = await (db.select(db.invoices)
+          ..where((t) => t.stornoOfId.equals(originalId)))
+        .getSingleOrNull();
+    return row == null ? null : _toModel(row);
+  }
+
   model.Invoice _toModel(Invoice row) => model.Invoice(
         id: row.id,
         number: row.number,
@@ -83,6 +91,7 @@ class InvoiceRepository {
         grossCents: row.grossCents,
         createdAt: row.createdAt,
         colleagueId: row.colleagueId,
+        stornoOfId: row.stornoOfId,
       );
 }
 

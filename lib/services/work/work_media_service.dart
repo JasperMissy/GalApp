@@ -57,6 +57,24 @@ class WorkMediaService {
     return result;
   }
 
+  /// Alle Medien eines Auftrags als absolute Dateipfade (für Vorschau/Player).
+  Future<List<String>> listMediaFiles(String orderTitle) async {
+    final Directory dir = Directory(
+      p.join(
+        baseDirectory.path,
+        'Aufträge',
+        _sanitizeFolder(orderTitle),
+        'Arbeitsdokumentation',
+      ),
+    );
+    if (!await dir.exists()) return <String>[];
+    final List<String> files = <String>[];
+    await for (final FileSystemEntity entity in dir.list(recursive: true)) {
+      if (entity is File) files.add(entity.path);
+    }
+    return files;
+  }
+
   /// Ersetzt Pfad-Sonderzeichen im Ordnernamen, damit das Speichern auf allen
   /// Plattformen (insb. Windows) zuverlässig funktioniert.
   String _sanitizeFolder(String name) {

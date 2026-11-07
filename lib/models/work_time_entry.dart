@@ -6,6 +6,7 @@ class WorkTimeEntry {
     required this.startedAt,
     required this.endedAt,
     required this.pausedAt,
+    required this.pausedMilliseconds,
     required this.createdAt,
   });
 
@@ -19,6 +20,7 @@ class WorkTimeEntry {
         pausedAt: json['paused_at'] == null
             ? null
             : DateTime.parse(json['paused_at'] as String),
+        pausedMilliseconds: json['paused_milliseconds'] as int? ?? 0,
         createdAt: DateTime.parse(json['created_at'] as String),
       );
 
@@ -27,7 +29,16 @@ class WorkTimeEntry {
   final DateTime startedAt;
   final DateTime? endedAt;
   final DateTime? pausedAt;
+  final int pausedMilliseconds;
   final DateTime createdAt;
+
+  /// Effektive Arbeitsdauer ohne Pausen. Läuft der Eintrag noch, wird [now]
+  /// (standardmäßig die aktuelle Zeit) als Ende verwendet.
+  Duration duration({DateTime? now}) {
+    final DateTime end = endedAt ?? now ?? DateTime.now();
+    return end.difference(startedAt) -
+        Duration(milliseconds: pausedMilliseconds);
+  }
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -35,6 +46,7 @@ class WorkTimeEntry {
         'started_at': startedAt.toIso8601String(),
         'ended_at': endedAt?.toIso8601String(),
         'paused_at': pausedAt?.toIso8601String(),
+        'paused_milliseconds': pausedMilliseconds,
         'created_at': createdAt.toIso8601String(),
       };
 }

@@ -8,9 +8,19 @@ void main() {
   late AppDatabase db;
   late OrderPackageRepository repo;
 
-  setUp(() {
+  setUp(() async {
     db = AppDatabase.forTesting(NativeDatabase.memory());
     repo = OrderPackageRepository(db);
+    // Fremdschlüssel: Pakete verweisen auf existierende Aufträge.
+    for (final String id in <String>['a-1', 'a-2']) {
+      await db.into(db.orders).insert(
+            OrdersCompanion.insert(
+              id: id,
+              title: 'Auftrag $id',
+              createdAt: DateTime(2026, 11, 1),
+            ),
+          );
+    }
   });
 
   tearDown(() async => db.close());

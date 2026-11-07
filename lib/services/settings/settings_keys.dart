@@ -11,4 +11,7 @@ abstract final class SettingsKeys {
   static const String ustId = 'ust_id';
   static const String iban = 'iban';
   static const String akzentfarbe = 'akzentfarbe';
+
+  /// Kleinunternehmerregelung (§19 UStG): Wert 'ja' oder 'nein'.
+  static const String kleinunternehmer = 'kleinunternehmer';
 }
