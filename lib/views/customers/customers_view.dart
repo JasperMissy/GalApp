@@ -21,7 +21,7 @@ import 'package:galabau_app/services/packages/order_import_service.dart';
 import 'package:galabau_app/services/packages/package_service.dart';
 import 'package:galabau_app/services/work/work_media_service.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:galabau_app/views/customers/client_detail_sheet.dart';
+import 'package:galabau_app/views/customers/client_detail_screen.dart';
 import 'package:galabau_app/views/customers/client_form_dialog.dart';
 import 'package:galabau_app/views/customers/order_detail_screen.dart';
 import 'package:galabau_app/views/customers/order_form_dialog.dart';
@@ -355,10 +355,10 @@ class _ClientListState extends ConsumerState<_ClientList> {
   }
 
   void _showClient(BuildContext context, Client client) {
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder: (_) => ClientDetailSheet(client: client),
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ClientDetailScreen(client: client),
+      ),
     );
   }
 }

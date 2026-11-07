@@ -103,3 +103,8 @@ final orderRepositoryProvider = Provider<OrderRepository>((ref) {
 final ordersProvider = FutureProvider<List<model.Order>>((ref) {
   return ref.watch(orderRepositoryProvider).watchAll().first;
 });
+
+final ordersByClientProvider =
+    FutureProvider.family<List<model.Order>, String>((ref, clientId) {
+  return ref.watch(orderRepositoryProvider).watchByClient(clientId).first;
+});
