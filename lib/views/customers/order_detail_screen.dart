@@ -107,11 +107,11 @@ class OrderDetailScreen extends ConsumerWidget {
   }
 
   Future<void> _edit(BuildContext context, WidgetRef ref) async {
-    final bool? changed = await showDialog<bool>(
+    final Order? changed = await showDialog<Order>(
       context: context,
       builder: (_) => OrderFormDialog(clientId: order.clientId, order: order),
     );
-    if (changed == true) {
+    if (changed != null) {
       ref.invalidate(ordersProvider);
       if (context.mounted) Navigator.of(context).pop();
     }

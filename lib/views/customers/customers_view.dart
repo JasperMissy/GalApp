@@ -511,13 +511,16 @@ class _OrderListState extends ConsumerState<_OrderList> {
   }
 
   Future<void> _addOrder(BuildContext context) async {
-    final bool? created = await showDialog<bool>(
+    final Order? order = await showDialog<Order>(
       context: context,
       builder: (_) => const OrderFormDialog(),
     );
-    if (created == true && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Auftrag angelegt')),
+    if (order != null && context.mounted) {
+      ref.invalidate(ordersProvider);
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => OrderDetailScreen(order: order),
+        ),
       );
     }
   }

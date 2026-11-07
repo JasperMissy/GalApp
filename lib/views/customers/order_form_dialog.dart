@@ -1,3 +1,7 @@
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:galabau_app/models/client.dart';
@@ -6,6 +10,11 @@ import 'package:galabau_app/models/order_status.dart';
 import 'package:galabau_app/services/customers/client_repository.dart';
 import 'package:galabau_app/services/id_generator.dart';
 import 'package:galabau_app/services/orders/order_repository.dart';
+import 'package:galabau_app/services/work/work_media_service.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:record/record.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 
 /// Formular zum Anlegen eines Auftrags (Kunde, Titel, Beschreibung,
 /// Ausführungsdatum, wiederkehrend, Notizen).
@@ -27,9 +36,13 @@ class _OrderFormDialogState extends ConsumerState<OrderFormDialog> {
   final TextEditingController _title = TextEditingController();
   final TextEditingController _description = TextEditingController();
   final TextEditingController _notes = TextEditingController();
+  final ImagePicker _picker = ImagePicker();
+  final AudioRecorder _recorder = AudioRecorder();
+  final SpeechToText _speech = SpeechToText();
+  final List<_MediaDraft> _media = <_MediaDraft>[];
   String? _clientId;
-  DateTime? _dueDate;
-  bool _recurring = false;
+  bool _listening = false;
+  bool _recording = false;
   bool _saving = false;
 
   @override
@@ -41,8 +54,6 @@ class _OrderFormDialogState extends ConsumerState<OrderFormDialog> {
       _title.text = order.title;
       _description.text = order.description;
       _notes.text = order.notes;
-      _dueDate = order.dueDateStart;
-      _recurring = order.recurring;
     } else if (widget.clientId != null) {
       _clientId = widget.clientId;
     }
@@ -53,6 +64,7 @@ class _OrderFormDialogState extends ConsumerState<OrderFormDialog> {
     _title.dispose();
     _description.dispose();
     _notes.dispose();
+    _speech.cancel();
     super.dispose();
   }
 
@@ -61,46 +73,186 @@ class _OrderFormDialogState extends ConsumerState<OrderFormDialog> {
     final String? clientId = _clientId;
     if (clientId == null) return;
     setState(() => _saving = true);
+
     final Order? existing = widget.order;
+    final Order order = Order(
+      id: existing?.id ?? newId(),
+      clientId: clientId,
+      title: _title.text.trim(),
+      description: _description.text.trim(),
+      createdAt: existing?.createdAt ?? DateTime.now(),
+      dueDateStart: existing?.dueDateStart,
+      dueDateEnd: existing?.dueDateEnd,
+      status: existing?.status ?? OrderStatus.offen,
+      recurring: existing?.recurring ?? false,
+      notes: _notes.text.trim(),
+      origin: existing?.origin ?? 'eigen',
+      packageId: existing?.packageId,
+      externalAddress: existing?.externalAddress,
+      senderName: existing?.senderName,
+    );
+
     if (existing == null) {
-      await ref.read(orderRepositoryProvider).insert(
-            Order(
-              id: newId(),
-              clientId: clientId,
-              title: _title.text.trim(),
-              description: _description.text.trim(),
-              createdAt: DateTime.now(),
-              dueDateStart: _dueDate,
-              dueDateEnd: null,
-              status: OrderStatus.offen,
-              recurring: _recurring,
-              notes: _notes.text.trim(),
-            ),
-          );
+      await ref.read(orderRepositoryProvider).insert(order);
     } else {
-      await ref.read(orderRepositoryProvider).update(
-            Order(
-              id: existing.id,
-              clientId: clientId,
-              title: _title.text.trim(),
-              description: _description.text.trim(),
-              createdAt: existing.createdAt,
-              dueDateStart: _dueDate,
-              dueDateEnd: existing.dueDateEnd,
-              status: existing.status,
-              recurring: _recurring,
-              notes: _notes.text.trim(),
-            ),
-          );
+      await ref.read(orderRepositoryProvider).update(order);
     }
+
+    await _saveMedia(order.title);
+
     ref.invalidate(ordersProvider);
-    if (mounted) Navigator.of(context).pop(true);
+    if (mounted) Navigator.of(context).pop(order);
   }
 
-  String _formatDate(DateTime date) =>
-      '${date.day.toString().padLeft(2, '0')}.'
-      '${date.month.toString().padLeft(2, '0')}.'
-      '${date.year}';
+  Future<void> _saveMedia(String orderTitle) async {
+    if (_media.isEmpty) return;
+    final Directory base = await getApplicationDocumentsDirectory();
+    final WorkMediaService service = WorkMediaService(baseDirectory: base);
+    for (final _MediaDraft media in _media) {
+      final int slash = media.name.indexOf('/');
+      final String subfolder = slash >= 0 ? media.name.substring(0, slash) : '';
+      final String fileName =
+          slash >= 0 ? media.name.substring(slash + 1) : media.name;
+      await service.saveMedia(
+        orderTitle: orderTitle,
+        subfolder: subfolder,
+        fileName: fileName,
+        bytes: media.bytes,
+      );
+    }
+  }
+
+  Future<void> _toggleDictation() async {
+    if (_listening) {
+      await _speech.stop();
+      setState(() => _listening = false);
+      return;
+    }
+    final bool available = await _speech.initialize(
+      onStatus: (String status) {
+        if (mounted && status == 'done') setState(() => _listening = false);
+      },
+      onError: (Object error) {
+        if (mounted) setState(() => _listening = false);
+      },
+    );
+    if (!available) return;
+    setState(() => _listening = true);
+    await _speech.listen(
+      listenOptions: SpeechListenOptions(localeId: 'de_DE'),
+      onResult: (result) {
+        if (mounted) {
+          setState(() => _description.text = result.recognizedWords);
+        }
+      },
+    );
+  }
+
+  Future<void> _showMediaSheet() async {
+    final String? choice = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (BuildContext context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            ListTile(
+              leading: const Icon(Icons.photo_camera),
+              title: const Text('Foto (Kamera)'),
+              onTap: () => Navigator.pop(context, 'foto'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Foto (Galerie)'),
+              onTap: () => Navigator.pop(context, 'galerie'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.videocam),
+              title: const Text('Video'),
+              onTap: () => Navigator.pop(context, 'video'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.mic),
+              title: const Text('Sprachmemo'),
+              onTap: () => Navigator.pop(context, 'memo'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.picture_as_pdf),
+              title: const Text('PDF'),
+              onTap: () => Navigator.pop(context, 'pdf'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (choice == null) return;
+    switch (choice) {
+      case 'foto':
+        await _takePhoto(ImageSource.camera);
+        break;
+      case 'galerie':
+        await _takePhoto(ImageSource.gallery);
+        break;
+      case 'video':
+        await _takeVideo();
+        break;
+      case 'memo':
+        await _toggleVoiceMemo();
+        break;
+      case 'pdf':
+        await _pickPdf();
+        break;
+    }
+  }
+
+  Future<void> _takePhoto(ImageSource source) async {
+    final XFile? image = await _picker.pickImage(source: source);
+    if (image == null) return;
+    final Uint8List bytes = await image.readAsBytes();
+    setState(() => _media.add(_MediaDraft('fotos/${image.name}', bytes)));
+  }
+
+  Future<void> _takeVideo() async {
+    final XFile? video = await _picker.pickVideo(source: ImageSource.camera);
+    if (video == null) return;
+    final Uint8List bytes = await video.readAsBytes();
+    setState(() => _media.add(_MediaDraft('videos/${video.name}', bytes)));
+  }
+
+  Future<void> _pickPdf() async {
+    final List<PlatformFile> files = await FilePicker.pickFiles(
+      type: FileType.any,
+      allowedExtensions: const <String>['pdf'],
+    );
+    if (files.isEmpty) return;
+    final Uint8List bytes = await files.single.readAsBytes();
+    setState(
+      () => _media.add(_MediaDraft('pdf/${files.single.name}', bytes)),
+    );
+  }
+
+  Future<void> _toggleVoiceMemo() async {
+    if (_recording) {
+      final String? path = await _recorder.stop();
+      setState(() => _recording = false);
+      if (path != null) {
+        final File file = File(path);
+        final Uint8List bytes = await file.readAsBytes();
+        setState(() => _media.add(_MediaDraft(
+              'sprachmemos/memo_${DateTime.now().millisecondsSinceEpoch}.m4a',
+              bytes,
+            )));
+        await file.delete();
+      }
+      return;
+    }
+    if (!await _recorder.hasPermission()) return;
+    final Directory tmp = await getTemporaryDirectory();
+    final String path =
+        '${tmp.path}/memo_${DateTime.now().millisecondsSinceEpoch}.m4a';
+    await _recorder.start(const RecordConfig(), path: path);
+    setState(() => _recording = true);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -138,36 +290,38 @@ class _OrderFormDialogState extends ConsumerState<OrderFormDialog> {
                             (v == null || v.trim().isEmpty) ? 'Titel erforderlich' : null,
                       ),
                       const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _description,
-                        decoration: const InputDecoration(labelText: 'Beschreibung'),
-                        maxLines: 3,
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Expanded(
+                            child: TextFormField(
+                              controller: _description,
+                              decoration: const InputDecoration(
+                                  labelText: 'Auftragsbeschreibung'),
+                              maxLines: 3,
+                            ),
+                          ),
+                          IconButton(
+                            icon: Icon(_listening ? Icons.mic : Icons.mic_none),
+                            color: _listening
+                                ? Theme.of(context).colorScheme.primary
+                                : null,
+                            tooltip: 'Diktieren',
+                            onPressed: _toggleDictation,
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 8),
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.event),
-                        title: Text(
-                          _dueDate == null
-                              ? 'Ausführungsdatum wählen'
-                              : _formatDate(_dueDate!),
+                      OutlinedButton.icon(
+                        onPressed: _showMediaSheet,
+                        icon: const Icon(Icons.add_photo_alternate),
+                        label: Text(
+                          _media.isEmpty
+                              ? 'Fotos, Videos, Sprachmemos oder PDF hinzufügen'
+                              : 'Medien hinzugefügt (${_media.length})',
                         ),
-                        onTap: () async {
-                          final DateTime? picked = await showDatePicker(
-                            context: context,
-                            initialDate: DateTime.now(),
-                            firstDate: DateTime(2020),
-                            lastDate: DateTime(2100),
-                          );
-                          if (picked != null) setState(() => _dueDate = picked);
-                        },
                       ),
-                      SwitchListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: const Text('Wiederkehrend'),
-                        value: _recurring,
-                        onChanged: (bool v) => setState(() => _recurring = v),
-                      ),
+                      const SizedBox(height: 8),
                       TextFormField(
                         controller: _notes,
                         decoration: const InputDecoration(labelText: 'Notizen'),
@@ -182,7 +336,7 @@ class _OrderFormDialogState extends ConsumerState<OrderFormDialog> {
       ),
       actions: <Widget>[
         TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
+          onPressed: () => Navigator.of(context).pop(),
           child: const Text('Abbrechen'),
         ),
         FilledButton(
@@ -192,4 +346,11 @@ class _OrderFormDialogState extends ConsumerState<OrderFormDialog> {
       ],
     );
   }
+}
+
+class _MediaDraft {
+  _MediaDraft(this.name, this.bytes);
+
+  final String name;
+  final Uint8List bytes;
 }
