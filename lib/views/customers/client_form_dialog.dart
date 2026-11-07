@@ -91,7 +91,8 @@ class _ClientFormDialogState extends ConsumerState<ClientFormDialog> {
               const SizedBox(height: 8),
               TextFormField(
                 controller: _street,
-                decoration: const InputDecoration(labelText: 'Straße'),
+                decoration:
+                    const InputDecoration(labelText: 'Straße + Hausnr.'),
               ),
               const SizedBox(height: 8),
               Row(

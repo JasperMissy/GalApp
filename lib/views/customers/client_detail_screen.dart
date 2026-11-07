@@ -5,6 +5,7 @@ import 'package:galabau_app/models/order.dart';
 import 'package:galabau_app/services/orders/order_repository.dart';
 import 'package:galabau_app/views/customers/client_invoices_screen.dart';
 import 'package:galabau_app/views/customers/order_detail_screen.dart';
+import 'package:galabau_app/views/customers/order_form_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Kundendetail als eigene Seite mit Rechnungsordner und Auftragsliste.
@@ -21,6 +22,11 @@ class ClientDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(client.name)),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _addOrder(context, ref),
+        icon: const Icon(Icons.add),
+        label: const Text('Auftrag hinzufügen'),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: <Widget>[
@@ -111,6 +117,22 @@ class ClientDetailScreen extends ConsumerWidget {
     final Uri parsed = Uri.parse(uri);
     if (await canLaunchUrl(parsed)) {
       await launchUrl(parsed);
+    }
+  }
+
+  Future<void> _addOrder(BuildContext context, WidgetRef ref) async {
+    final Order? order = await showDialog<Order>(
+      context: context,
+      builder: (_) => OrderFormDialog(clientId: client.id),
+    );
+    if (order != null && context.mounted) {
+      ref.invalidate(ordersByClientProvider(client.id));
+      ref.invalidate(ordersProvider);
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => OrderDetailScreen(order: order),
+        ),
+      );
     }
   }
 }
