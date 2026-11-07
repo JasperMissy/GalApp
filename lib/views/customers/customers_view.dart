@@ -314,17 +314,20 @@ class _ClientListState extends ConsumerState<_ClientList> {
                         message: 'Fügen Sie über „Kunde“ Ihren ersten Kunden hinzu.',
                       )
                     : ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
                         itemCount: filtered.length,
                         itemBuilder: (BuildContext context, int index) {
                           final Client client = filtered[index];
                           return Card(
-                            margin: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 4),
                             child: ListTile(
                               leading: const CircleAvatar(
                                 child: Icon(Icons.person_outline),
                               ),
-                              title: Text(client.name),
+                              title: Text(
+                                client.name,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w600),
+                              ),
                               subtitle: Text(
                                   '${client.zip} ${client.city}'.trim()),
                               onTap: () => _showClient(context, client),
@@ -435,12 +438,11 @@ class _OrderListState extends ConsumerState<_OrderList> {
                         message: 'Legen Sie über „Auftrag“ Ihren ersten Auftrag an.',
                       )
                     : ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
                         itemCount: filtered.length,
                         itemBuilder: (BuildContext context, int index) {
                           final Order order = filtered[index];
                           return Card(
-                            margin: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 4),
                             child: ListTile(
                               leading: CircleAvatar(
                                 backgroundColor: _statusColor(order),
@@ -451,7 +453,11 @@ class _OrderListState extends ConsumerState<_OrderList> {
                                   color: Colors.white,
                                 ),
                               ),
-                              title: Text(order.title),
+                              title: Text(
+                                order.title,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w600),
+                              ),
                               subtitle: Text(_statusText(order)),
                               onTap: () => _openOrder(context, order),
                             ),

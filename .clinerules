@@ -12,3 +12,11 @@
   - `lib/services/` (Lokaler Speicher, ZIP-Export, PDF-Generator, `.xlsx`-Mapper)
 - Nutze Provider oder Riverpod für das State Management.
 - Schreibe sauberen, modularisierten Dart-Code ohne ungelöste `todos`.
+
+## UI & Design-Richtlinien (Modern Material 3)
+- **Cards & Container:** `Card`/`Container` mit weichem BorderRadius (12–16) und dezentem Rahmen (`elevation: 0` + feiner Border) statt roher grauer Flächen. Das zentrale `CardTheme` in `lib/views/theme/app_theme.dart` nutzen – keine eigenen `margin`-Werte an `Card`.
+- **Abstände & Padding:** großzügiges Padding (`EdgeInsets.all(16)` aufwärts) und klare `SizedBox(height: 12/16)` zur Trennung; Listen-Padding statt Card-Margins.
+- **Typografie:** TextTheme-Hierarchie nutzen (`titleLarge`/`titleSmall`), `fontWeight: FontWeight.w600` für Überschriften.
+- **Farbakzente:** Material-3-`ColorScheme` verwenden (Primär Grün für Aktionen, dezente Grau-/Pastelltöne für Hintergründe). Keine harten Primärfarben ohne Kontext.
+- **Icons:** sinnvoll vor Listeneinträge und in Buttons setzen.
+- **Keine harten schwarzen Linien:** keine `Divider(color: Colors.black)` – dezent `Colors.grey.shade200` o. Ä.
