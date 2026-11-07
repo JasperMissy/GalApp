@@ -109,17 +109,28 @@ class _OrderFormDialogState extends ConsumerState<OrderFormDialog> {
     final Directory base = await getApplicationDocumentsDirectory();
     final WorkMediaService service = WorkMediaService(baseDirectory: base);
     for (final _MediaDraft media in _media) {
-      final int slash = media.name.indexOf('/');
-      final String subfolder = slash >= 0 ? media.name.substring(0, slash) : '';
-      final String fileName =
-          slash >= 0 ? media.name.substring(slash + 1) : media.name;
-      await service.saveMedia(
-        orderTitle: orderTitle,
-        subfolder: subfolder,
-        fileName: fileName,
-        bytes: media.bytes,
-      );
+      try {
+        final int slash = media.name.indexOf('/');
+        final String subfolder = slash >= 0 ? media.name.substring(0, slash) : '';
+        final String fileName =
+            slash >= 0 ? media.name.substring(slash + 1) : media.name;
+        await service.saveMedia(
+          orderTitle: orderTitle,
+          subfolder: subfolder,
+          fileName: fileName,
+          bytes: media.bytes,
+        );
+      } catch (_) {
+        // Ein Fehler beim Medien-Speichern verhindert das Speichern nicht.
+      }
     }
+  }
+
+  String _sanitize(String name) {
+    final String cleaned = name.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
+    return cleaned.isEmpty
+        ? 'datei_${DateTime.now().millisecondsSinceEpoch}'
+        : cleaned;
   }
 
   Future<void> _toggleDictation() async {
@@ -209,14 +220,15 @@ class _OrderFormDialogState extends ConsumerState<OrderFormDialog> {
     final XFile? image = await _picker.pickImage(source: source);
     if (image == null) return;
     final Uint8List bytes = await image.readAsBytes();
-    setState(() => _media.add(_MediaDraft('fotos/${image.name}', bytes)));
+    setState(() => _media.add(_MediaDraft('fotos/${_sanitize(image.name)}', bytes)));
   }
 
   Future<void> _takeVideo() async {
     final XFile? video = await _picker.pickVideo(source: ImageSource.camera);
     if (video == null) return;
     final Uint8List bytes = await video.readAsBytes();
-    setState(() => _media.add(_MediaDraft('videos/${video.name}', bytes)));
+    setState(
+        () => _media.add(_MediaDraft('videos/${_sanitize(video.name)}', bytes)));
   }
 
   Future<void> _pickPdf() async {
@@ -227,7 +239,7 @@ class _OrderFormDialogState extends ConsumerState<OrderFormDialog> {
     if (files.isEmpty) return;
     final Uint8List bytes = await files.single.readAsBytes();
     setState(
-      () => _media.add(_MediaDraft('pdf/${files.single.name}', bytes)),
+      () => _media.add(_MediaDraft('pdf/${_sanitize(files.single.name)}', bytes)),
     );
   }
 
@@ -315,12 +327,22 @@ class _OrderFormDialogState extends ConsumerState<OrderFormDialog> {
                       OutlinedButton.icon(
                         onPressed: _showMediaSheet,
                         icon: const Icon(Icons.add_photo_alternate),
-                        label: Text(
-                          _media.isEmpty
-                              ? 'Fotos, Videos, Sprachmemos oder PDF hinzufügen'
-                              : 'Medien hinzugefügt (${_media.length})',
-                        ),
+                        label: const Text(
+                            'Fotos, Videos, Sprachmemos oder PDF hinzufügen'),
                       ),
+                      for (int i = 0; i < _media.length; i++)
+                        ListTile(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.attach_file),
+                          title: Text(_media[i].name),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.close),
+                            tooltip: 'Entfernen',
+                            onPressed: () =>
+                                setState(() => _media.removeAt(i)),
+                          ),
+                        ),
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: _notes,
