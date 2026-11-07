@@ -9,7 +9,6 @@ import 'package:galabau_app/models/colleague.dart';
 import 'package:galabau_app/models/invoice.dart';
 import 'package:galabau_app/models/order.dart';
 import 'package:galabau_app/models/order_package.dart' as model;
-import 'package:galabau_app/models/order_status.dart';
 import 'package:galabau_app/models/package_manifest.dart';
 import 'package:galabau_app/models/work_note.dart';
 import 'package:galabau_app/models/work_time_entry.dart';
@@ -28,7 +27,6 @@ import 'package:galabau_app/services/settings/settings_keys.dart';
 import 'package:galabau_app/services/settings/settings_repository.dart';
 import 'package:galabau_app/views/shared/empty_state.dart';
 import 'package:galabau_app/views/shared/error_state.dart';
-import 'package:galabau_app/views/theme/app_colors.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -36,6 +34,7 @@ import 'calculation_screen.dart';
 import 'invoice_feedback_dialog.dart';
 import 'invoice_form_dialog.dart';
 import 'order_form_dialog.dart';
+import 'order_overview_tab.dart';
 import 'work_documentation_tab.dart';
 
 /// Auftragsordner mit den vier Unterordnern (Vision, Abschnitt 4.3).
@@ -47,7 +46,7 @@ class OrderDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return DefaultTabController(
-      length: 5,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           title: Text(order.title),
@@ -81,24 +80,16 @@ class OrderDetailScreen extends ConsumerWidget {
           bottom: const TabBar(
             isScrollable: true,
             tabs: <Widget>[
-              Tab(text: 'Kalkulation'),
-              Tab(text: 'Auftragsdetails'),
+              Tab(text: 'Übersicht'),
               Tab(text: 'Arbeitsdokumentation'),
-              Tab(text: 'Assoziierte Rechnungen'),
               Tab(text: 'Rechnungen'),
             ],
           ),
         ),
         body: TabBarView(
           children: <Widget>[
-            CalculationScreen(order: order),
-            _DetailsTab(order: order),
+            OrderOverviewTab(order: order),
             WorkDocumentationTab(orderId: order.id, orderTitle: order.title),
-            const EmptyState(
-              icon: Icons.attach_file_outlined,
-              title: 'Assoziierte Rechnungen',
-              message: 'Material- und Subunternehmer-Rechnungen können hier später importiert werden.',
-            ),
             _InvoicesTab(order: order),
           ],
         ),
@@ -323,105 +314,6 @@ class _ColleaguePicker extends ConsumerWidget {
   }
 }
 
-class _DetailsTab extends ConsumerWidget {
-  const _DetailsTab({required this.order});
-
-  final Order order;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final String? clientId = order.clientId;
-    final AsyncValue<Client?> client = clientId == null
-        ? const AsyncValue.data(null)
-        : ref.watch(clientByIdProvider(clientId));
-
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: <Widget>[
-        Wrap(
-          spacing: 8,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: <Widget>[
-            _statusBadge(order),
-            if (order.recurring)
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.statusRecurring,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text(
-                  'wiederkehrend',
-                  style: TextStyle(color: Colors.white, fontSize: 12),
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        client.when(
-          data: (Client? c) => c == null
-              ? const SizedBox.shrink()
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      c.name,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w700),
-                    ),
-                    Text('${c.street}\n${c.zip} ${c.city}'.trim()),
-                  ],
-                ),
-          loading: () => const SizedBox.shrink(),
-          error: (_, _) => const SizedBox.shrink(),
-        ),
-        const SizedBox(height: 16),
-        Text('Erfassungsdatum: ${_date(order.createdAt)}'),
-        if (order.dueDateStart != null)
-          Text('Ausführungsdatum: ${_date(order.dueDateStart!)}'),
-        if (order.description.isNotEmpty) ...<Widget>[
-          const SizedBox(height: 16),
-          Text('Beschreibung',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleSmall
-                  ?.copyWith(fontWeight: FontWeight.w700)),
-          Text(order.description),
-        ],
-        if (order.notes.isNotEmpty) ...<Widget>[
-          const SizedBox(height: 16),
-          Text('Notizen',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleSmall
-                  ?.copyWith(fontWeight: FontWeight.w700)),
-          Text(order.notes),
-        ],
-      ],
-    );
-  }
-
-  Widget _statusBadge(Order order) {
-    final bool erledigt = order.status == OrderStatus.erledigt;
-    final Color color =
-        erledigt ? AppColors.statusDone : AppColors.statusOpen;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        erledigt ? 'Erledigt' : 'Offen',
-        style: const TextStyle(color: Colors.white, fontSize: 12),
-      ),
-    );
-  }
-}
-
 class _InvoicesTab extends ConsumerWidget {
   const _InvoicesTab({required this.order});
 
@@ -432,41 +324,87 @@ class _InvoicesTab extends ConsumerWidget {
     final AsyncValue<List<Invoice>> invoices =
         ref.watch(invoicesByOrderProvider(order.id));
 
-    return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _generate(context, ref),
-        icon: const Icon(Icons.receipt_long),
-        label: const Text('Rechnung generieren'),
-      ),
-      body: invoices.when(
-        data: (List<Invoice> all) => all.isEmpty
-            ? const EmptyState(
-                icon: Icons.receipt_long_outlined,
-                title: 'Noch keine Rechnungen',
-                message: 'Generieren Sie über den Button Ihre erste Rechnung.',
+    return invoices.when(
+      data: (List<Invoice> all) {
+        final List<Invoice> own =
+            all.where((Invoice i) => i.colleagueId == null).toList();
+        final List<Invoice> associated =
+            all.where((Invoice i) => i.colleagueId != null).toList();
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _openCalculation(context),
+                    icon: const Icon(Icons.calculate_outlined),
+                    label: const Text('Kalkulation'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () => _generate(context, ref),
+                    icon: const Icon(Icons.receipt_long),
+                    label: const Text('Rechnung'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text('Rechnungen',
+                style: Theme.of(context)
+                    .textTheme
+                    .titleSmall
+                    ?.copyWith(fontWeight: FontWeight.w700)),
+            if (own.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Text('Noch keine Rechnungen.'),
               )
-            : ListView.builder(
-                itemCount: all.length,
-                itemBuilder: (BuildContext context, int index) {
-                  final Invoice invoice = all[index];
-                  return Card(
-                    margin: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 4),
-                    child: ListTile(
-                      leading: const Icon(Icons.receipt_long),
-                      title: Text(invoice.number ?? ''),
-                      subtitle: Text(invoice.issuedDate == null
-                          ? ''
-                          : _date(invoice.issuedDate!)),
-                      trailing: Text('${_euro(invoice.grossCents)} €'),
-                    ),
-                  );
-                },
-              ),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => ErrorState(
-          onRetry: () => ref.invalidate(invoicesByOrderProvider(order.id)),
-        ),
+            else
+              for (final Invoice invoice in own) _invoiceTile(invoice),
+            const SizedBox(height: 16),
+            Text('Assoziierte Rechnungen (Material/Personal)',
+                style: Theme.of(context)
+                    .textTheme
+                    .titleSmall
+                    ?.copyWith(fontWeight: FontWeight.w700)),
+            if (associated.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Text('Noch keine assoziierten Rechnungen.'),
+              )
+            else
+              for (final Invoice invoice in associated) _invoiceTile(invoice),
+          ],
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, _) => ErrorState(
+        onRetry: () => ref.invalidate(invoicesByOrderProvider(order.id)),
+      ),
+    );
+  }
+
+  Widget _invoiceTile(Invoice invoice) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      child: ListTile(
+        leading: const Icon(Icons.receipt_long),
+        title: Text(invoice.number ?? ''),
+        subtitle:
+            Text(invoice.issuedDate == null ? '' : _date(invoice.issuedDate!)),
+        trailing: Text('${_euro(invoice.grossCents)} €'),
+      ),
+    );
+  }
+
+  void _openCalculation(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => CalculationScreen(order: order),
       ),
     );
   }
