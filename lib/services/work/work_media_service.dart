@@ -25,7 +25,7 @@ class WorkMediaService {
       p.join(
         baseDirectory.path,
         'Aufträge',
-        orderTitle,
+        _sanitizeFolder(orderTitle),
         'Arbeitsdokumentation',
         subfolder,
       ),
@@ -39,7 +39,12 @@ class WorkMediaService {
   /// Liest alle Medien eines Auftrags (relativer Pfad → Bytes).
   Future<Map<String, Uint8List>> loadMedia(String orderTitle) async {
     final Directory dir = Directory(
-      p.join(baseDirectory.path, 'Aufträge', orderTitle, 'Arbeitsdokumentation'),
+      p.join(
+        baseDirectory.path,
+        'Aufträge',
+        _sanitizeFolder(orderTitle),
+        'Arbeitsdokumentation',
+      ),
     );
     if (!await dir.exists()) return <String, Uint8List>{};
     final Map<String, Uint8List> result = <String, Uint8List>{};
@@ -50,5 +55,15 @@ class WorkMediaService {
       }
     }
     return result;
+  }
+
+  /// Ersetzt Pfad-Sonderzeichen im Ordnernamen, damit das Speichern auf allen
+  /// Plattformen (insb. Windows) zuverlässig funktioniert.
+  String _sanitizeFolder(String name) {
+    final String cleaned =
+        name.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_').trim();
+    return cleaned.isEmpty
+        ? 'auftrag_${DateTime.now().millisecondsSinceEpoch}'
+        : cleaned;
   }
 }

@@ -74,55 +74,72 @@ class _OrderFormDialogState extends ConsumerState<OrderFormDialog> {
     if (clientId == null) return;
     setState(() => _saving = true);
 
-    final Order? existing = widget.order;
-    final Order order = Order(
-      id: existing?.id ?? newId(),
-      clientId: clientId,
-      title: _title.text.trim(),
-      description: _description.text.trim(),
-      createdAt: existing?.createdAt ?? DateTime.now(),
-      dueDateStart: existing?.dueDateStart,
-      dueDateEnd: existing?.dueDateEnd,
-      status: existing?.status ?? OrderStatus.offen,
-      recurring: existing?.recurring ?? false,
-      notes: _notes.text.trim(),
-      origin: existing?.origin ?? 'eigen',
-      packageId: existing?.packageId,
-      externalAddress: existing?.externalAddress,
-      senderName: existing?.senderName,
-    );
+    try {
+      final Order? existing = widget.order;
+      final Order order = Order(
+        id: existing?.id ?? newId(),
+        clientId: clientId,
+        title: _title.text.trim(),
+        description: _description.text.trim(),
+        createdAt: existing?.createdAt ?? DateTime.now(),
+        dueDateStart: existing?.dueDateStart,
+        dueDateEnd: existing?.dueDateEnd,
+        status: existing?.status ?? OrderStatus.offen,
+        recurring: existing?.recurring ?? false,
+        notes: _notes.text.trim(),
+        origin: existing?.origin ?? 'eigen',
+        packageId: existing?.packageId,
+        externalAddress: existing?.externalAddress,
+        senderName: existing?.senderName,
+      );
 
-    if (existing == null) {
-      await ref.read(orderRepositoryProvider).insert(order);
-    } else {
-      await ref.read(orderRepositoryProvider).update(order);
+      if (existing == null) {
+        await ref.read(orderRepositoryProvider).insert(order);
+      } else {
+        await ref.read(orderRepositoryProvider).update(order);
+      }
+
+      await _saveMedia(order.title);
+
+      ref.invalidate(ordersProvider);
+      if (mounted) Navigator.of(context).pop(order);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Auftrag konnte nicht gespeichert werden: $e'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
-
-    await _saveMedia(order.title);
-
-    ref.invalidate(ordersProvider);
-    if (mounted) Navigator.of(context).pop(order);
   }
 
   Future<void> _saveMedia(String orderTitle) async {
     if (_media.isEmpty) return;
-    final Directory base = await getApplicationDocumentsDirectory();
-    final WorkMediaService service = WorkMediaService(baseDirectory: base);
-    for (final _MediaDraft media in _media) {
-      try {
-        final int slash = media.name.indexOf('/');
-        final String subfolder = slash >= 0 ? media.name.substring(0, slash) : '';
-        final String fileName =
-            slash >= 0 ? media.name.substring(slash + 1) : media.name;
-        await service.saveMedia(
-          orderTitle: orderTitle,
-          subfolder: subfolder,
-          fileName: fileName,
-          bytes: media.bytes,
-        );
-      } catch (_) {
-        // Ein Fehler beim Medien-Speichern verhindert das Speichern nicht.
+    try {
+      final Directory base = await getApplicationDocumentsDirectory();
+      final WorkMediaService service = WorkMediaService(baseDirectory: base);
+      for (final _MediaDraft media in _media) {
+        try {
+          final int slash = media.name.indexOf('/');
+          final String subfolder =
+              slash >= 0 ? media.name.substring(0, slash) : '';
+          final String fileName =
+              slash >= 0 ? media.name.substring(slash + 1) : media.name;
+          await service.saveMedia(
+            orderTitle: orderTitle,
+            subfolder: subfolder,
+            fileName: fileName,
+            bytes: media.bytes,
+          );
+        } catch (_) {
+          // Ein Fehler beim Medien-Speichern verhindert das Speichern nicht.
+        }
       }
+    } catch (_) {
+      // Basisverzeichnis nicht ermittelbar – Auftrag wird trotzdem gespeichert.
     }
   }
 

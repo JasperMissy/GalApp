@@ -48,6 +48,20 @@ void main() {
     expect(path, contains('sprachmemos'));
   });
 
+  test('saveMedia bereinigt Sonderzeichen im Auftragstitel', () async {
+    final String path = await service.saveMedia(
+      orderTitle: 'Rasen: Pflege/2?',
+      subfolder: 'fotos',
+      fileName: '1.jpg',
+      bytes: Uint8List.fromList(<int>[7, 8, 9]),
+    );
+
+    final File file = File(path);
+    expect(file.existsSync(), isTrue);
+    expect(file.readAsBytesSync(), <int>[7, 8, 9]);
+    expect(path, contains('Arbeitsdokumentation'));
+  });
+
   test('loadMedia liest gespeicherte Medien', () async {
     await service.saveMedia(
       orderTitle: 'Laubentfernung',
