@@ -42,10 +42,16 @@ class CustomersView extends ConsumerWidget {
         appBar: AppBar(
           title: const Text('Kunden'),
           actions: <Widget>[
-            IconButton(
-              icon: const Icon(Icons.unarchive_outlined),
-              tooltip: 'Paket importieren',
-              onPressed: () => _importPackage(context, ref),
+            Builder(
+              builder: (BuildContext context) {
+                final int tabIndex = DefaultTabController.of(context).index;
+                if (tabIndex != 1) return const SizedBox.shrink();
+                return IconButton(
+                  icon: const Icon(Icons.unarchive_outlined),
+                  tooltip: 'Paket importieren',
+                  onPressed: () => _importPackage(context, ref),
+                );
+              },
             ),
             Builder(
               builder: (BuildContext context) {
@@ -255,10 +261,10 @@ class CustomersView extends ConsumerWidget {
 
 /// Filter für die Auftragsliste (laut Vision 4.3: Offen, Erledigt,
 /// wiederkehrend).
-enum _OrderFilter { offen, erledigt, wiederkehrend, alle }
+enum _OrderFilter { offen, erledigt, wiederkehrend }
 
 /// Herkunft eines Auftrags (Filter: eigene vs. externe Aufträge).
-enum _OrderOriginFilter { meine, externe, alle }
+enum _OrderOriginFilter { meine, externe }
 
 class _ClientList extends ConsumerStatefulWidget {
   const _ClientList();
@@ -365,8 +371,10 @@ class _OrderList extends ConsumerStatefulWidget {
 }
 
 class _OrderListState extends ConsumerState<_OrderList> {
-  _OrderFilter _filter = _OrderFilter.offen;
-  _OrderOriginFilter _origin = _OrderOriginFilter.meine;
+  final Set<_OrderFilter> _filters = <_OrderFilter>{_OrderFilter.offen};
+  final Set<_OrderOriginFilter> _origins = <_OrderOriginFilter>{
+    _OrderOriginFilter.meine,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -380,9 +388,7 @@ class _OrderListState extends ConsumerState<_OrderList> {
       ),
       body: orders.when(
         data: (List<Order> all) {
-          final List<Order> filtered = all
-              .where((Order o) => _matchesFilter(o) && _matchesOrigin(o))
-              .toList();
+          final List<Order> filtered = all.where(_matches).toList();
           return Column(
             children: <Widget>[
               Padding(
@@ -395,10 +401,12 @@ class _OrderListState extends ConsumerState<_OrderList> {
                       children: <Widget>[
                         for (final _OrderOriginFilter o
                             in _OrderOriginFilter.values)
-                          ChoiceChip(
+                          FilterChip(
                             label: Text(_originLabel(o)),
-                            selected: _origin == o,
-                            onSelected: (_) => setState(() => _origin = o),
+                            selected: _origins.contains(o),
+                            onSelected: (bool selected) => setState(() {
+                              selected ? _origins.add(o) : _origins.remove(o);
+                            }),
                           ),
                       ],
                     ),
@@ -407,10 +415,12 @@ class _OrderListState extends ConsumerState<_OrderList> {
                       spacing: 8,
                       children: <Widget>[
                         for (final _OrderFilter f in _OrderFilter.values)
-                          ChoiceChip(
+                          FilterChip(
                             label: Text(_filterLabel(f)),
-                            selected: _filter == f,
-                            onSelected: (_) => setState(() => _filter = f),
+                            selected: _filters.contains(f),
+                            onSelected: (bool selected) => setState(() {
+                              selected ? _filters.add(f) : _filters.remove(f);
+                            }),
                           ),
                       ],
                     ),
@@ -458,29 +468,26 @@ class _OrderListState extends ConsumerState<_OrderList> {
     );
   }
 
-  bool _matchesFilter(Order order) {
-    return switch (_filter) {
-      _OrderFilter.alle => true,
-      _OrderFilter.offen => order.status == OrderStatus.offen,
-      _OrderFilter.erledigt => order.status == OrderStatus.erledigt,
-      _OrderFilter.wiederkehrend => order.recurring,
+  bool _matches(Order order) {
+    final bool originMatch = switch (order.origin) {
+      'eigen' => _origins.contains(_OrderOriginFilter.meine),
+      'erhalten' => _origins.contains(_OrderOriginFilter.externe),
+      _ => false,
     };
+    final bool statusMatch =
+        (order.status == OrderStatus.offen &&
+            _filters.contains(_OrderFilter.offen)) ||
+            (order.status == OrderStatus.erledigt &&
+                _filters.contains(_OrderFilter.erledigt)) ||
+            (order.recurring && _filters.contains(_OrderFilter.wiederkehrend));
+    return originMatch && statusMatch;
   }
 
   String _filterLabel(_OrderFilter filter) {
     return switch (filter) {
-      _OrderFilter.alle => 'Alle',
       _OrderFilter.offen => 'Offen',
       _OrderFilter.erledigt => 'Erledigt',
       _OrderFilter.wiederkehrend => 'Wiederkehrend',
-    };
-  }
-
-  bool _matchesOrigin(Order order) {
-    return switch (_origin) {
-      _OrderOriginFilter.meine => order.origin == 'eigen',
-      _OrderOriginFilter.externe => order.origin == 'erhalten',
-      _OrderOriginFilter.alle => true,
     };
   }
 
@@ -488,7 +495,6 @@ class _OrderListState extends ConsumerState<_OrderList> {
     return switch (origin) {
       _OrderOriginFilter.meine => 'Meine Aufträge',
       _OrderOriginFilter.externe => 'Externe Aufträge',
-      _OrderOriginFilter.alle => 'Beide',
     };
   }
 
