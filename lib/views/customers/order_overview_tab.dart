@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:galabau_app/models/client.dart';
 import 'package:galabau_app/models/order.dart';
-import 'package:galabau_app/models/order_status.dart';
 import 'package:galabau_app/services/customers/client_repository.dart';
 import 'package:galabau_app/services/orders/order_repository.dart';
 import 'package:galabau_app/services/work/work_media_service.dart';
@@ -46,14 +45,45 @@ class _OrderOverviewTabState extends ConsumerState<OrderOverviewTab> {
   @override
   Widget build(BuildContext context) {
     final Order order = widget.order;
+    final TextTheme textTheme = Theme.of(context).textTheme;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: <Widget>[
         _metaLine(context, order),
-        const SizedBox(height: 16),
-        _detailsCard(context, order),
         const SizedBox(height: 8),
         _dueDateTile(context, order),
+        if (order.description.isNotEmpty) ...<Widget>[
+          const SizedBox(height: 16),
+          Text('Beschreibung',
+              style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 4),
+          Text(order.description),
+        ],
+        if (order.notes.isNotEmpty) ...<Widget>[
+          const SizedBox(height: 16),
+          Text('Notizen',
+              style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 4),
+          Text(order.notes),
+        ],
+        if (_photos.isNotEmpty) ...<Widget>[
+          const SizedBox(height: 16),
+          Text('Bilder',
+              style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: <Widget>[
+              for (final Uint8List photo in _photos)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.memory(photo,
+                      width: 96, height: 96, fit: BoxFit.cover),
+                ),
+            ],
+          ),
+        ],
       ],
     );
   }
@@ -79,81 +109,6 @@ class _OrderOverviewTabState extends ConsumerState<OrderOverviewTab> {
       ),
       loading: () => const Text('…'),
       error: (Object e, StackTrace st) => const Text(''),
-    );
-  }
-
-  Widget _detailsCard(BuildContext context, Order order) {
-    return Card(
-      child: InkWell(
-        onTap: () => _showDetails(context, order),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              const Row(
-                children: <Widget>[
-                  Icon(Icons.description_outlined),
-                  SizedBox(width: 8),
-                  Text('Auftragsdetails',
-                      style: TextStyle(fontWeight: FontWeight.w600)),
-                ],
-              ),
-              if (_photos.isNotEmpty) ...<Widget>[
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: 80,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _photos.length,
-                    separatorBuilder: (BuildContext context, int index) =>
-                        const SizedBox(width: 8),
-                    itemBuilder: (BuildContext context, int index) => ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.memory(_photos[index], fit: BoxFit.cover),
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showDetails(BuildContext context, Order order) {
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder: (BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text('Auftragsdetails',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 8),
-            Text('Erfassungsdatum: ${_date(order.createdAt)}'),
-            if (order.description.isNotEmpty) ...<Widget>[
-              const SizedBox(height: 8),
-              Text(order.description),
-            ],
-            if (order.notes.isNotEmpty) ...<Widget>[
-              const SizedBox(height: 8),
-              Text('Notizen: ${order.notes}'),
-            ],
-            const SizedBox(height: 8),
-            Text(order.status == OrderStatus.erledigt
-                ? 'Status: Erledigt'
-                : 'Status: Offen'),
-          ],
-        ),
-      ),
     );
   }
 

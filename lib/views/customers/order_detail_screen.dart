@@ -81,7 +81,7 @@ class OrderDetailScreen extends ConsumerWidget {
             isScrollable: true,
             tabs: <Widget>[
               Tab(text: 'Übersicht'),
-              Tab(text: 'Arbeitsdokumentation'),
+              Tab(text: 'Dokumentation'),
               Tab(text: 'Rechnungen'),
             ],
           ),
