@@ -30,6 +30,7 @@ import 'package:galabau_app/views/shared/error_state.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'associated_invoice_dialog.dart';
 import 'calculation_screen.dart';
 import 'invoice_feedback_dialog.dart';
 import 'invoice_form_dialog.dart';
@@ -352,6 +353,12 @@ class _InvoicesTab extends ConsumerWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () => _addAssociated(context, ref),
+              icon: const Icon(Icons.attach_file),
+              label: const Text('Assoziierte Rechnung hinzufügen'),
+            ),
             const SizedBox(height: 16),
             Text('Rechnungen',
                 style: Theme.of(context)
@@ -407,6 +414,44 @@ class _InvoicesTab extends ConsumerWidget {
         builder: (_) => CalculationScreen(order: order),
       ),
     );
+  }
+
+  Future<void> _addAssociated(BuildContext context, WidgetRef ref) async {
+    final String? clientId = order.clientId;
+    if (clientId == null) return;
+    final AssociatedInvoiceData? data =
+        await showDialog<AssociatedInvoiceData>(
+      context: context,
+      builder: (_) => const AssociatedInvoiceDialog(),
+    );
+    if (data == null || !context.mounted) return;
+
+    final Directory base = await getApplicationDocumentsDirectory();
+    final WorkMediaService mediaService = WorkMediaService(baseDirectory: base);
+    await mediaService.saveMedia(
+      orderTitle: order.title,
+      subfolder: 'Assoziierte Rechnungen/${data.category}',
+      fileName: data.fileName,
+      bytes: data.bytes,
+    );
+
+    await ref.read(invoiceRepositoryProvider).insert(Invoice(
+      id: newId(),
+      number: data.fileName,
+      type: 'invoice',
+      clientId: clientId,
+      orderId: order.id,
+      colleagueId: null,
+      status: 'issued',
+      issuedDate: DateTime.now(),
+      netCents: 0,
+      vatRateBp: 1900,
+      vatCents: 0,
+      grossCents: 0,
+      createdAt: DateTime.now(),
+    ));
+
+    ref.invalidate(invoicesByOrderProvider(order.id));
   }
 
   void _generate(BuildContext context, WidgetRef ref) {
