@@ -41,7 +41,40 @@ class WorkDocumentationRepository {
         .getSingleOrNull();
     if (row == null) return;
     await (db.update(db.workTimeEntries)..where((t) => t.id.equals(row.id)))
-        .write(WorkTimeEntriesCompanion(endedAt: Value(DateTime.now())));
+        .write(WorkTimeEntriesCompanion(
+          endedAt: Value(DateTime.now()),
+          pausedAt: Value<DateTime?>(null),
+        ));
+  }
+
+  /// Pausiert den letzten laufenden Zeiteintrag.
+  Future<void> pauseTime(String orderId) async {
+    final row = await (db.select(db.workTimeEntries)
+          ..where((t) =>
+              t.orderId.equals(orderId) &
+              t.endedAt.isNull() &
+              t.pausedAt.isNull())
+          ..orderBy([(t) => OrderingTerm.desc(t.startedAt)])
+          ..limit(1))
+        .getSingleOrNull();
+    if (row == null) return;
+    await (db.update(db.workTimeEntries)..where((t) => t.id.equals(row.id)))
+        .write(WorkTimeEntriesCompanion(pausedAt: Value(DateTime.now())));
+  }
+
+  /// Setzt den letzten pausierten Zeiteintrag fort.
+  Future<void> resumeTime(String orderId) async {
+    final row = await (db.select(db.workTimeEntries)
+          ..where((t) =>
+              t.orderId.equals(orderId) &
+              t.endedAt.isNull() &
+              t.pausedAt.isNotNull())
+          ..orderBy([(t) => OrderingTerm.desc(t.startedAt)])
+          ..limit(1))
+        .getSingleOrNull();
+    if (row == null) return;
+    await (db.update(db.workTimeEntries)..where((t) => t.id.equals(row.id)))
+        .write(WorkTimeEntriesCompanion(pausedAt: Value<DateTime?>(null)));
   }
 
   /// Anmerkung eines Auftrags (oder null).
@@ -69,6 +102,7 @@ class WorkDocumentationRepository {
         orderId: row.orderId,
         startedAt: row.startedAt,
         endedAt: row.endedAt,
+        pausedAt: row.pausedAt,
         createdAt: row.createdAt,
       );
 

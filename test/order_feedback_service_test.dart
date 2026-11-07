@@ -23,6 +23,7 @@ void main() {
         orderId: 'a-1',
         startedAt: DateTime(2026, 11, 5, 8),
         endedAt: DateTime(2026, 11, 5, 12),
+        pausedAt: null,
         createdAt: DateTime(2026, 11, 5, 8),
       ),
     ];

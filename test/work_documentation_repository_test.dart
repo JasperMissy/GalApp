@@ -35,6 +35,17 @@ void main() {
     expect(times.last.endedAt, isNotNull);
   });
 
+  test('pauseTime/resumeTime setzen den Pause-Zustand', () async {
+    await repo.startTime('a-1');
+    await repo.pauseTime('a-1');
+    var times = await repo.watchTimes('a-1').first;
+    expect(times.single.pausedAt, isNotNull);
+
+    await repo.resumeTime('a-1');
+    times = await repo.watchTimes('a-1').first;
+    expect(times.single.pausedAt, isNull);
+  });
+
   test('saveNote/loadNote Roundtrip', () async {
     expect(await repo.loadNote('a-1'), isNull);
 

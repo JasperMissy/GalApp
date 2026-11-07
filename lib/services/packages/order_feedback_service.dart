@@ -67,6 +67,7 @@ String buildWorkDocumentationJson({
         <String, dynamic>{
           'started_at': t.startedAt.toIso8601String(),
           'ended_at': t.endedAt?.toIso8601String(),
+          'paused_at': t.pausedAt?.toIso8601String(),
         },
     ],
     'note': note,

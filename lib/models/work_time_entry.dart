@@ -5,6 +5,7 @@ class WorkTimeEntry {
     required this.orderId,
     required this.startedAt,
     required this.endedAt,
+    required this.pausedAt,
     required this.createdAt,
   });
 
@@ -15,6 +16,9 @@ class WorkTimeEntry {
         endedAt: json['ended_at'] == null
             ? null
             : DateTime.parse(json['ended_at'] as String),
+        pausedAt: json['paused_at'] == null
+            ? null
+            : DateTime.parse(json['paused_at'] as String),
         createdAt: DateTime.parse(json['created_at'] as String),
       );
 
@@ -22,6 +26,7 @@ class WorkTimeEntry {
   final String orderId;
   final DateTime startedAt;
   final DateTime? endedAt;
+  final DateTime? pausedAt;
   final DateTime createdAt;
 
   Map<String, dynamic> toJson() => {
@@ -29,6 +34,7 @@ class WorkTimeEntry {
         'order_id': orderId,
         'started_at': startedAt.toIso8601String(),
         'ended_at': endedAt?.toIso8601String(),
+        'paused_at': pausedAt?.toIso8601String(),
         'created_at': createdAt.toIso8601String(),
       };
 }

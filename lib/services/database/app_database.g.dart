@@ -4287,6 +4287,15 @@ class $WorkTimeEntriesTable extends WorkTimeEntries
         requiredDuringInsert: false,
       ).withConverter<DateTime?>($WorkTimeEntriesTable.$converterendedAtn);
   @override
+  late final GeneratedColumnWithTypeConverter<DateTime?, String> pausedAt =
+      GeneratedColumn<String>(
+        'paused_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      ).withConverter<DateTime?>($WorkTimeEntriesTable.$converterpausedAtn);
+  @override
   late final GeneratedColumnWithTypeConverter<DateTime, String> createdAt =
       GeneratedColumn<String>(
         'created_at',
@@ -4301,6 +4310,7 @@ class $WorkTimeEntriesTable extends WorkTimeEntries
     orderId,
     startedAt,
     endedAt,
+    pausedAt,
     createdAt,
   ];
   @override
@@ -4357,6 +4367,12 @@ class $WorkTimeEntriesTable extends WorkTimeEntries
           data['${effectivePrefix}ended_at'],
         ),
       ),
+      pausedAt: $WorkTimeEntriesTable.$converterpausedAtn.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}paused_at'],
+        ),
+      ),
       createdAt: $WorkTimeEntriesTable.$convertercreatedAt.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.string,
@@ -4377,6 +4393,10 @@ class $WorkTimeEntriesTable extends WorkTimeEntries
       const IsoDateConverter();
   static TypeConverter<DateTime?, String?> $converterendedAtn =
       NullAwareTypeConverter.wrap($converterendedAt);
+  static TypeConverter<DateTime, String> $converterpausedAt =
+      const IsoDateConverter();
+  static TypeConverter<DateTime?, String?> $converterpausedAtn =
+      NullAwareTypeConverter.wrap($converterpausedAt);
   static TypeConverter<DateTime, String> $convertercreatedAt =
       const IsoDateConverter();
 }
@@ -4386,12 +4406,14 @@ class WorkTimeEntry extends DataClass implements Insertable<WorkTimeEntry> {
   final String orderId;
   final DateTime startedAt;
   final DateTime? endedAt;
+  final DateTime? pausedAt;
   final DateTime createdAt;
   const WorkTimeEntry({
     required this.id,
     required this.orderId,
     required this.startedAt,
     this.endedAt,
+    this.pausedAt,
     required this.createdAt,
   });
   @override
@@ -4407,6 +4429,11 @@ class WorkTimeEntry extends DataClass implements Insertable<WorkTimeEntry> {
     if (!nullToAbsent || endedAt != null) {
       map['ended_at'] = Variable<String>(
         $WorkTimeEntriesTable.$converterendedAtn.toSql(endedAt),
+      );
+    }
+    if (!nullToAbsent || pausedAt != null) {
+      map['paused_at'] = Variable<String>(
+        $WorkTimeEntriesTable.$converterpausedAtn.toSql(pausedAt),
       );
     }
     {
@@ -4425,6 +4452,9 @@ class WorkTimeEntry extends DataClass implements Insertable<WorkTimeEntry> {
       endedAt: endedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(endedAt),
+      pausedAt: pausedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pausedAt),
       createdAt: Value(createdAt),
     );
   }
@@ -4439,6 +4469,7 @@ class WorkTimeEntry extends DataClass implements Insertable<WorkTimeEntry> {
       orderId: serializer.fromJson<String>(json['orderId']),
       startedAt: serializer.fromJson<DateTime>(json['startedAt']),
       endedAt: serializer.fromJson<DateTime?>(json['endedAt']),
+      pausedAt: serializer.fromJson<DateTime?>(json['pausedAt']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -4450,6 +4481,7 @@ class WorkTimeEntry extends DataClass implements Insertable<WorkTimeEntry> {
       'orderId': serializer.toJson<String>(orderId),
       'startedAt': serializer.toJson<DateTime>(startedAt),
       'endedAt': serializer.toJson<DateTime?>(endedAt),
+      'pausedAt': serializer.toJson<DateTime?>(pausedAt),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -4459,12 +4491,14 @@ class WorkTimeEntry extends DataClass implements Insertable<WorkTimeEntry> {
     String? orderId,
     DateTime? startedAt,
     Value<DateTime?> endedAt = const Value.absent(),
+    Value<DateTime?> pausedAt = const Value.absent(),
     DateTime? createdAt,
   }) => WorkTimeEntry(
     id: id ?? this.id,
     orderId: orderId ?? this.orderId,
     startedAt: startedAt ?? this.startedAt,
     endedAt: endedAt.present ? endedAt.value : this.endedAt,
+    pausedAt: pausedAt.present ? pausedAt.value : this.pausedAt,
     createdAt: createdAt ?? this.createdAt,
   );
   WorkTimeEntry copyWithCompanion(WorkTimeEntriesCompanion data) {
@@ -4473,6 +4507,7 @@ class WorkTimeEntry extends DataClass implements Insertable<WorkTimeEntry> {
       orderId: data.orderId.present ? data.orderId.value : this.orderId,
       startedAt: data.startedAt.present ? data.startedAt.value : this.startedAt,
       endedAt: data.endedAt.present ? data.endedAt.value : this.endedAt,
+      pausedAt: data.pausedAt.present ? data.pausedAt.value : this.pausedAt,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -4484,13 +4519,15 @@ class WorkTimeEntry extends DataClass implements Insertable<WorkTimeEntry> {
           ..write('orderId: $orderId, ')
           ..write('startedAt: $startedAt, ')
           ..write('endedAt: $endedAt, ')
+          ..write('pausedAt: $pausedAt, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, orderId, startedAt, endedAt, createdAt);
+  int get hashCode =>
+      Object.hash(id, orderId, startedAt, endedAt, pausedAt, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4499,6 +4536,7 @@ class WorkTimeEntry extends DataClass implements Insertable<WorkTimeEntry> {
           other.orderId == this.orderId &&
           other.startedAt == this.startedAt &&
           other.endedAt == this.endedAt &&
+          other.pausedAt == this.pausedAt &&
           other.createdAt == this.createdAt);
 }
 
@@ -4507,6 +4545,7 @@ class WorkTimeEntriesCompanion extends UpdateCompanion<WorkTimeEntry> {
   final Value<String> orderId;
   final Value<DateTime> startedAt;
   final Value<DateTime?> endedAt;
+  final Value<DateTime?> pausedAt;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
   const WorkTimeEntriesCompanion({
@@ -4514,6 +4553,7 @@ class WorkTimeEntriesCompanion extends UpdateCompanion<WorkTimeEntry> {
     this.orderId = const Value.absent(),
     this.startedAt = const Value.absent(),
     this.endedAt = const Value.absent(),
+    this.pausedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -4522,6 +4562,7 @@ class WorkTimeEntriesCompanion extends UpdateCompanion<WorkTimeEntry> {
     required String orderId,
     required DateTime startedAt,
     this.endedAt = const Value.absent(),
+    this.pausedAt = const Value.absent(),
     required DateTime createdAt,
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -4533,6 +4574,7 @@ class WorkTimeEntriesCompanion extends UpdateCompanion<WorkTimeEntry> {
     Expression<String>? orderId,
     Expression<String>? startedAt,
     Expression<String>? endedAt,
+    Expression<String>? pausedAt,
     Expression<String>? createdAt,
     Expression<int>? rowid,
   }) {
@@ -4541,6 +4583,7 @@ class WorkTimeEntriesCompanion extends UpdateCompanion<WorkTimeEntry> {
       if (orderId != null) 'order_id': orderId,
       if (startedAt != null) 'started_at': startedAt,
       if (endedAt != null) 'ended_at': endedAt,
+      if (pausedAt != null) 'paused_at': pausedAt,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -4551,6 +4594,7 @@ class WorkTimeEntriesCompanion extends UpdateCompanion<WorkTimeEntry> {
     Value<String>? orderId,
     Value<DateTime>? startedAt,
     Value<DateTime?>? endedAt,
+    Value<DateTime?>? pausedAt,
     Value<DateTime>? createdAt,
     Value<int>? rowid,
   }) {
@@ -4559,6 +4603,7 @@ class WorkTimeEntriesCompanion extends UpdateCompanion<WorkTimeEntry> {
       orderId: orderId ?? this.orderId,
       startedAt: startedAt ?? this.startedAt,
       endedAt: endedAt ?? this.endedAt,
+      pausedAt: pausedAt ?? this.pausedAt,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
     );
@@ -4583,6 +4628,11 @@ class WorkTimeEntriesCompanion extends UpdateCompanion<WorkTimeEntry> {
         $WorkTimeEntriesTable.$converterendedAtn.toSql(endedAt.value),
       );
     }
+    if (pausedAt.present) {
+      map['paused_at'] = Variable<String>(
+        $WorkTimeEntriesTable.$converterpausedAtn.toSql(pausedAt.value),
+      );
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<String>(
         $WorkTimeEntriesTable.$convertercreatedAt.toSql(createdAt.value),
@@ -4601,6 +4651,7 @@ class WorkTimeEntriesCompanion extends UpdateCompanion<WorkTimeEntry> {
           ..write('orderId: $orderId, ')
           ..write('startedAt: $startedAt, ')
           ..write('endedAt: $endedAt, ')
+          ..write('pausedAt: $pausedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -7753,6 +7804,7 @@ typedef $$WorkTimeEntriesTableCreateCompanionBuilder =
       required String orderId,
       required DateTime startedAt,
       Value<DateTime?> endedAt,
+      Value<DateTime?> pausedAt,
       required DateTime createdAt,
       Value<int> rowid,
     });
@@ -7762,6 +7814,7 @@ typedef $$WorkTimeEntriesTableUpdateCompanionBuilder =
       Value<String> orderId,
       Value<DateTime> startedAt,
       Value<DateTime?> endedAt,
+      Value<DateTime?> pausedAt,
       Value<DateTime> createdAt,
       Value<int> rowid,
     });
@@ -7794,6 +7847,12 @@ class $$WorkTimeEntriesTableFilterComposer
   ColumnWithTypeConverterFilters<DateTime?, DateTime, String> get endedAt =>
       $composableBuilder(
         column: $table.endedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, String> get pausedAt =>
+      $composableBuilder(
+        column: $table.pausedAt,
         builder: (column) => ColumnWithTypeConverterFilters(column),
       );
 
@@ -7833,6 +7892,11 @@ class $$WorkTimeEntriesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get pausedAt => $composableBuilder(
+    column: $table.pausedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -7859,6 +7923,9 @@ class $$WorkTimeEntriesTableAnnotationComposer
 
   GeneratedColumnWithTypeConverter<DateTime?, String> get endedAt =>
       $composableBuilder(column: $table.endedAt, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime?, String> get pausedAt =>
+      $composableBuilder(column: $table.pausedAt, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<DateTime, String> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -7901,6 +7968,7 @@ class $$WorkTimeEntriesTableTableManager
                 Value<String> orderId = const Value.absent(),
                 Value<DateTime> startedAt = const Value.absent(),
                 Value<DateTime?> endedAt = const Value.absent(),
+                Value<DateTime?> pausedAt = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => WorkTimeEntriesCompanion(
@@ -7908,6 +7976,7 @@ class $$WorkTimeEntriesTableTableManager
                 orderId: orderId,
                 startedAt: startedAt,
                 endedAt: endedAt,
+                pausedAt: pausedAt,
                 createdAt: createdAt,
                 rowid: rowid,
               ),
@@ -7917,6 +7986,7 @@ class $$WorkTimeEntriesTableTableManager
                 required String orderId,
                 required DateTime startedAt,
                 Value<DateTime?> endedAt = const Value.absent(),
+                Value<DateTime?> pausedAt = const Value.absent(),
                 required DateTime createdAt,
                 Value<int> rowid = const Value.absent(),
               }) => WorkTimeEntriesCompanion.insert(
@@ -7924,6 +7994,7 @@ class $$WorkTimeEntriesTableTableManager
                 orderId: orderId,
                 startedAt: startedAt,
                 endedAt: endedAt,
+                pausedAt: pausedAt,
                 createdAt: createdAt,
                 rowid: rowid,
               ),

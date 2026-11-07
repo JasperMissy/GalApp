@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -36,6 +37,11 @@ class _WorkDocumentationTabState extends ConsumerState<WorkDocumentationTab> {
   final AudioRecorder _recorder = AudioRecorder();
   bool _listening = false;
   bool _recording = false;
+  Timer? _timer;
+  DateTime? _runningSince;
+  Duration _elapsed = Duration.zero;
+  bool _running = false;
+  bool _paused = false;
 
   @override
   void initState() {
@@ -47,6 +53,7 @@ class _WorkDocumentationTabState extends ConsumerState<WorkDocumentationTab> {
   void dispose() {
     _noteController.dispose();
     _speech.cancel();
+    _timer?.cancel();
     super.dispose();
   }
 
@@ -103,12 +110,68 @@ class _WorkDocumentationTabState extends ConsumerState<WorkDocumentationTab> {
     );
   }
 
-  void _startTime() {
-    ref.read(workDocumentationRepositoryProvider).startTime(widget.orderId);
+  void _toggle() {
+    final repo = ref.read(workDocumentationRepositoryProvider);
+    if (!_running) {
+      repo.startTime(widget.orderId);
+      setState(() {
+        _running = true;
+        _paused = false;
+        _runningSince = DateTime.now();
+      });
+      _startTimer();
+    } else if (!_paused) {
+      repo.pauseTime(widget.orderId);
+      setState(() {
+        _paused = true;
+        _elapsed += DateTime.now().difference(_runningSince!);
+      });
+      _stopTimer();
+    } else {
+      repo.resumeTime(widget.orderId);
+      setState(() {
+        _paused = false;
+        _runningSince = DateTime.now();
+      });
+      _startTimer();
+    }
   }
 
-  void _finishTime() {
+  void _finish() {
     ref.read(workDocumentationRepositoryProvider).finishTime(widget.orderId);
+    _stopTimer();
+    setState(() {
+      _running = false;
+      _paused = false;
+      _runningSince = null;
+      _elapsed = Duration.zero;
+    });
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  void _stopTimer() {
+    _timer?.cancel();
+    _timer = null;
+  }
+
+  Duration get _currentElapsed =>
+      _elapsed +
+      ((_running && !_paused && _runningSince != null)
+          ? DateTime.now().difference(_runningSince!)
+          : Duration.zero);
+
+  String _elapsedText() {
+    final Duration d = _currentElapsed;
+    final String h = d.inHours.toString().padLeft(2, '0');
+    final String m = (d.inMinutes % 60).toString().padLeft(2, '0');
+    final String s = (d.inSeconds % 60).toString().padLeft(2, '0');
+    return '$h:$m:$s';
   }
 
   Future<WorkMediaService> _mediaService() async {
@@ -195,26 +258,27 @@ class _WorkDocumentationTabState extends ConsumerState<WorkDocumentationTab> {
             style:
                 textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
         const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
+        Row(
           children: <Widget>[
             FilledButton.icon(
-              onPressed: _startTime,
-              icon: const Icon(Icons.play_arrow),
-              label: const Text('Start'),
+              onPressed: _toggle,
+              icon: Icon(_running && !_paused ? Icons.pause : Icons.play_arrow),
+              label: Text(_running ? (_paused ? 'Weiter' : 'Pause') : 'Start'),
             ),
-            OutlinedButton.icon(
-              onPressed: _finishTime,
-              icon: const Icon(Icons.pause),
-              label: const Text('Pause'),
-            ),
-            OutlinedButton.icon(
-              onPressed: _finishTime,
-              icon: const Icon(Icons.stop),
-              label: const Text('Ende'),
-            ),
+            if (_running) ...<Widget>[
+              const SizedBox(width: 8),
+              IconButton(
+                onPressed: _finish,
+                icon: const Icon(Icons.stop),
+                tooltip: 'Beenden',
+              ),
+            ],
           ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          _elapsedText(),
+          style: Theme.of(context).textTheme.headlineMedium,
         ),
         const SizedBox(height: 12),
         times.when(
